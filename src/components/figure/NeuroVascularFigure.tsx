@@ -1,57 +1,49 @@
+import { PATHS } from '../../data/anatomy3d.generated'
+import { PLATES } from '../../data/plates.generated'
 import { NV_ITEMS } from '../../data/neurovascular'
-import { BONE_PATHS } from '../../data/wristGeometry'
+import { f1, linePath } from './plateGeo'
 
 export const ART = '#c0405f'
-export const NERVE = '#7a64a3'
+export const NERVE = '#c99a12'
+const BASE = import.meta.env.BASE_URL
+const P = PLATES.palmar
 
-const BADGE: Record<string, [number, number]> = {
-  'a-radial': [175, 170], 'a-ulnar': [354, 120], 'a-interosea-ant': [268, 200], 'a-interosea-post': [301, 150],
-  'rete-palmar': [190, 345], 'rete-dorsal': [312, 377], 'n-mediano': [262, 40], 'n-interoseo-ant': [244, 120],
-  'n-radial-sup': [149, 100], 'n-interoseo-post': [214, 90], 'n-ulnar': [346, 60], 'n-articulares': [268, 358],
+/** Arcos y esquemas sin recorrido 3D (redes carpianas, ramos articulares). */
+const EXTRA: Record<string, { pts: number[][]; dashed: boolean }> = {
+  'rete-palmar': { pts: [[-2.7, -0.4, 0], [-1.6, -0.15, 0], [-0.4, -0.25, 0], [0.8, -0.5, 0], [1.3, -0.9, 0]], dashed: false },
+  'rete-dorsal': { pts: [[-2.8, -0.7, 0], [-1.6, -0.55, 0], [-0.4, -0.6, 0], [0.8, -0.85, 0], [1.4, -1.2, 0]], dashed: true },
+  'n-articulares': { pts: [[-2.2, 0.15, 0], [-1.0, 0.3, 0], [0.2, 0.2, 0]], dashed: true },
 }
+const DORSAL = new Set(['a-interosea-post', 'n-interoseo-post', 'n-radial-sup', 'rete-dorsal'])
+const BADGE_AT: Record<string, number> = { 'a-radial': 0.18, 'a-ulnar': 0.2, 'n-mediano': 0.28, 'n-ulnar': 0.3, 'n-radial-sup': 0.35, 'a-interosea-ant': 0.45, 'a-interosea-post': 0.55, 'n-interoseo-ant': 0.5, 'n-interoseo-post': 0.6, 'rete-palmar': 0.4, 'rete-dorsal': 0.62, 'n-articulares': 0.5 }
 
 export default function NeuroVascularFigure({ selected, onSelect, hidden }: { selected: string | null; onSelect: (id: string) => void; hidden: { arteria: boolean; nervio: boolean } }) {
+  const y0 = (P.a1 - 10.2) * P.S, y1 = (P.a1 + 4.2) * P.S
   return (
-    <svg viewBox="0 0 520 600" role="group" aria-label="Esquema de arterias y nervios del antebrazo distal y la mano, vista palmar" className="block h-auto w-full select-none">
-      <defs>
-        <linearGradient id="skin" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#f7ebe4" /><stop offset="1" stopColor="#f3dfd8" /></linearGradient>
-      </defs>
-      {/* contorno de partes blandas */}
-      <path d="M118 0 H402 V330 C402 360 432 380 434 430 L434 520 C434 575 410 596 380 596 H140 C110 596 88 575 88 520 L84 420 C84 390 118 370 118 330 Z" fill="url(#skin)" stroke="#e5c9bf" strokeWidth="2" />
-      {/* huesos en transparencia (carpo) */}
-      <g opacity=".7" aria-hidden>
-        <path d="M165 0 L255 0 C258 100 270 180 306 244 L308 322 C290 330 262 338 232 346 C196 356 160 366 126 384 C118 360 124 310 136 250 C150 150 160 60 165 0 Z" transform="translate(0 0)" fill="#efe8da" stroke="#cdc6b4" />
-        <path d="M330 0 L400 0 C402 100 412 176 424 230 C432 262 428 292 414 312 L416 340 L396 326 C374 318 336 312 322 296 C310 282 314 250 322 232 C330 150 330 60 330 0 Z" fill="#efe8da" stroke="#cdc6b4" />
-        {['escafoides', 'semilunar', 'piramidal', 'pisiforme', 'trapecio', 'trapezoide', 'hueso_grande', 'ganchoso'].map((id) => <path key={id} d={BONE_PATHS[id]} fill={id === 'escafoides' ? '#f2d6df' : '#efe8da'} stroke="#cdc6b4" />)}
-      </g>
-      {/* retináculo flexor (referencia) */}
-      <path d="M160 392 L410 392" stroke="#b8b3a3" strokeWidth="8" strokeOpacity=".35" strokeLinecap="round" aria-hidden />
-      <text x="418" y="398" fontSize="11" fill="#8a8f7a" aria-hidden>retináculo flexor</text>
-
+    <svg viewBox={`40 ${y0} ${P.w - 80} ${y1 - y0}`} role="group" aria-label="Arterias y nervios del antebrazo distal y la muñeca sobre los huesos reales, vista palmar" className="block h-auto w-full select-none">
+      <image href={`${BASE}atlas/palmar.webp`} x="0" y="0" width={P.w} height={P.h} opacity=".5" />
       {NV_ITEMS.map((it) => {
         if (hidden[it.kind]) return null
-        const isSel = selected === it.id
-        const color = it.kind === 'arteria' ? ART : NERVE
+        const src = PATHS[it.id] ? { pts: PATHS[it.id].pts, dashed: DORSAL.has(it.id) || !!it.dashed, r: PATHS[it.id].r } : { ...EXTRA[it.id], r: 0.06 }
+        if (!src.pts) return null
+        const d = linePath('palmar', src.pts), isSel = selected === it.id, color = it.kind === 'arteria' ? ART : NERVE
+        const w = Math.max(5, src.r * P.S * 1.7) * (isSel ? 1.4 : 1)
+        const at = src.pts[Math.min(src.pts.length - 1, Math.round((src.pts.length - 1) * (BADGE_AT[it.id] ?? 0.4)))]
+        const [bx, by] = (() => { const p = linePath('palmar', [at]).slice(1).split(' ').map(Number); return [p[0], p[1]] })()
         return (
-          <g key={it.id} opacity={selected && !isSel ? 0.35 : 1}>
-            {it.paths.map((d, i) => (
-              <g key={i}>
-                {isSel && <path d={d} fill="none" stroke={color} strokeOpacity=".25" strokeWidth="16" strokeLinecap="round" />}
-                <path d={d} fill="none" stroke={color} strokeWidth={isSel ? (it.kind === 'arteria' ? 6 : 5) : it.kind === 'arteria' ? 4 : 3} strokeLinecap="round" strokeDasharray={it.dashed ? '8 6' : undefined} />
-                <path d={d} fill="none" stroke="transparent" strokeWidth="26" strokeLinecap="round" pointerEvents="stroke" className="zone"
-                  role="button" tabIndex={i === 0 ? 0 : -1} aria-label={it.nombre} aria-pressed={isSel}
-                  onClick={() => onSelect(it.id)}
-                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSelect(it.id) } }} />
-              </g>
-            ))}
-            <g aria-hidden onClick={() => onSelect(it.id)} className="cursor-pointer">
-              <circle cx={BADGE[it.id][0]} cy={BADGE[it.id][1]} r="10" fill={color} stroke="#fff" strokeWidth="1.5" />
-              <text x={BADGE[it.id][0]} y={BADGE[it.id][1] + 4} textAnchor="middle" fontSize="11" fontWeight="700" fill="#fff">{it.num}</text>
+          <g key={it.id} opacity={selected && !isSel ? 0.4 : 1}>
+            {isSel && <path d={d} fill="none" stroke={color} strokeOpacity=".28" strokeWidth={w + 14} strokeLinecap="round" strokeLinejoin="round" />}
+            <path d={d} fill="none" stroke={color} strokeWidth={w} strokeLinecap="round" strokeLinejoin="round" strokeDasharray={src.dashed ? `${w * 1.8} ${w * 1.4}` : undefined} />
+            <path d={d} fill="none" stroke="transparent" strokeWidth="34" strokeLinecap="round" pointerEvents="stroke" className="zone" role="button" tabIndex={0} aria-label={it.nombre} aria-pressed={isSel}
+              onClick={() => onSelect(it.id)} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSelect(it.id) } }} />
+            <g aria-hidden className="cursor-pointer" onClick={() => onSelect(it.id)}>
+              <circle cx={f1(bx)} cy={f1(by)} r="13" fill={color} stroke="#fff" strokeWidth="2" />
+              <text x={f1(bx)} y={f1(by) + 5} textAnchor="middle" fontSize="14" fontWeight="700" fill="#fff">{it.num}</text>
             </g>
           </g>
         )
       })}
-      <text x="22" y="24" fontSize="11" fill="#5b6272" fontWeight="600" letterSpacing="1.5">VISTA PALMAR · RADIO A LA IZQUIERDA</text>
+      <text x="52" y={y0 + 22} fontSize="14" fontWeight="600" fill="#5b6272" letterSpacing="1">VISTA PALMAR · PUNTEADO = DORSAL O PROFUNDO</text>
     </svg>
   )
 }

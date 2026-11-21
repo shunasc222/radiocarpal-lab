@@ -75,7 +75,7 @@ export function Badge({ children, tone = 'sage' }: { children: ReactNode; tone?:
 }
 
 /** Pestañas accesibles. */
-export function Tabs<T extends string>({ value, onChange, items, label }: { value: T; onChange: (v: T) => void; items: { id: T; label: string; icon?: ReactNode }[]; label: string }) {
+export function Tabs<T extends string>({ value, onChange, items, label }: { value: T; onChange: (v: T) => void; items: { id: T; label: string; short?: string; icon?: ReactNode }[]; label: string }) {
   return (
     <div role="tablist" aria-label={label} className="inline-flex max-w-full gap-1 overflow-x-auto rounded-full border border-line bg-warm p-1 shadow-soft">
       {items.map((it) => (
@@ -83,7 +83,7 @@ export function Tabs<T extends string>({ value, onChange, items, label }: { valu
           key={it.id} role="tab" type="button" aria-selected={value === it.id} onClick={() => onChange(it.id)}
           className={cn('inline-flex min-h-11 shrink-0 items-center gap-2 rounded-full px-4 text-sm font-medium transition-colors', value === it.id ? 'bg-deep text-white' : 'text-ink-soft hover:bg-cream')}
         >
-          {it.icon}{it.label}
+          {it.icon}{it.short ? (<><span className="sm:hidden">{it.short}</span><span className="hidden sm:inline">{it.label}</span></>) : it.label}
         </button>
       ))}
     </div>

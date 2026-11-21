@@ -9,7 +9,7 @@ const server = process.argv[2] ? null : spawn('npx', ['vite', 'preview', '--port
 await new Promise((r) => setTimeout(r, server ? 2500 : 0))
 
 let fails = 0
-const jsClick = (loc) => loc.evaluate((e) => e.click()) // evita la barra inferior fija en móvil
+const jsClick = (loc) => loc.evaluate((e) => e.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }))) // evita la barra inferior fija en móvil
 const ok = (cond, msg) => { console.log(`${cond ? 'PASS' : 'FAIL'}  ${msg}`); if (!cond) fails++ }
 const browser = await chromium.launch({ args: ['--use-gl=swiftshader', '--enable-webgl', '--ignore-gpu-blocklist'] })
 
@@ -28,13 +28,17 @@ for (const [name, vp, touch] of [['escritorio', { width: 1280, height: 900 }, fa
   }
 
   await go('atlas')
-  await page.locator('path[aria-label="Escafoides"]').first().click()
+  await jsClick(page.locator('path[aria-label="Escafoides"]').first())
   ok((await page.getByTestId('structure-card').innerText()).includes('Escafoides'), `${name}: clic en zona del atlas abre la ficha`)
   await page.getByRole('button', { name: 'Resaltar superficies articulares' }).click()
   await page.getByRole('button', { name: 'Restablecer vista' }).click()
   await page.waitForTimeout(600)
   ok(await page.getByTestId('structure-card').count() === 0, `${name}: restablecer vista limpia la selección`)
-  await page.getByRole('tab', { name: /autoevaluación/ }).click()
+  await page.getByRole('tab', { name: /distal/i }).click()
+  await jsClick(page.locator('path[aria-label="Fosita escafoidea"]').first())
+  ok((await page.getByTestId('structure-card').innerText()).includes('Fosita escafoidea'), `${name}: zona real de la vista distal (fosita escafoidea)`)
+  await jsClick(page.getByRole('button', { name: 'Restablecer vista' }))
+  await page.getByRole('tab', { name: /autoevaluación/i }).click()
   await page.getByRole('group', { name: 'Opciones' }).getByRole('button').first().click()
   ok(await page.getByTestId('atlas-feedback').isVisible(), `${name}: modo autoevaluación del atlas da retroalimentación`)
 
@@ -68,11 +72,11 @@ for (const [name, vp, touch] of [['escritorio', { width: 1280, height: 900 }, fa
 
   await go('ligamentos')
   await page.getByRole('tab', { name: 'Vista dorsal' }).click()
-  await page.getByRole('button', { name: 'Ligamento radiocarpiano dorsal' }).first().click()
+  await jsClick(page.getByRole('list', { name: 'Lista de ligamentos' }).getByRole('button', { name: /radiocarpiano dorsal/ }))
   ok((await page.getByTestId('ligament-card').innerText()).includes('dorsal'), `${name}: ligamento dorsal`)
 
   await go('miologia')
-  await page.getByRole('button', { name: 'Extensor radial largo del carpo' }).first().click()
+  await jsClick(page.getByRole('button', { name: 'Extensor radial largo del carpo' }).first())
   ok((await page.getByTestId('muscle-card').innerText()).includes('2.º metacarpiano'), `${name}: tarjeta de músculo`)
   await page.getByRole('tab', { name: 'Movimientos' }).click()
   await page.getByRole('button', { name: 'Flexión', exact: true }).click()

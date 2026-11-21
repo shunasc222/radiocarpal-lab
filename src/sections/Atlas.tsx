@@ -3,13 +3,14 @@ import { motion } from 'motion/react'
 import { Check, Eye, EyeOff, GraduationCap, Layers, RotateCcw, BookOpen, X as XIcon, ArrowRight } from 'lucide-react'
 import { Badge, Button, Card, SectionHeader, Tabs, Toggle, useToast } from '../components/ui/ui'
 import { StructureCard } from '../components/ui/InfoCard'
-import AtlasFigure from '../components/figure/AtlasFigure'
+import AtlasFigure, { VIEW_OF, zonesOf, type AtlasView } from '../components/figure/AtlasFigure'
 import { STRUCTURES, STRUCTURE_BY_ID, SURFACES } from '../data/structures'
 import { shuffle, useMediaQuery, cn } from '../lib/utils'
 
 type Mode = 'estudio' | 'autoevaluacion'
 
 const QUIZ_POOL = STRUCTURES.filter((s) => s.enEsquema).map((s) => s.id)
+const viewFor = (id: string, cur: AtlasView): AtlasView => (VIEW_OF[id] ? VIEW_OF[id] : id in zonesOf(cur) ? cur : 'palmar')
 
 function newRound(prev?: string | null) {
   const pool = QUIZ_POOL.filter((id) => id !== prev)
@@ -21,6 +22,7 @@ function newRound(prev?: string | null) {
 export default function Atlas() {
   const wide = useMediaQuery('(min-width: 720px)')
   const { toast } = useToast()
+  const [view, setView] = useState<AtlasView>('palmar')
   const [mode, setMode] = useState<Mode>('estudio')
   const [selected, setSelected] = useState<string | null>(null)
   const [labels, setLabels] = useState(true)
@@ -30,13 +32,14 @@ export default function Atlas() {
   const [score, setScore] = useState({ ok: 0, total: 0, streak: 0 })
 
   const reset = useCallback(() => {
-    setMode('estudio'); setSelected(null); setLabels(true); setSurfaces(false); setAnswer(null)
+    setMode('estudio'); setView('palmar'); setSelected(null); setLabels(true); setSurfaces(false); setAnswer(null)
   }, [])
 
   const answerQuiz = useCallback((id: string) => {
     if (answer) return
     setAnswer(id)
     setSelected(round.target)
+    setView(viewFor(round.target, view))
     const ok = id === round.target
     setScore((s) => {
       const streak = ok ? s.streak + 1 : 0
@@ -47,13 +50,13 @@ export default function Atlas() {
 
   const onSelect = useCallback((id: string) => {
     if (mode === 'autoevaluacion') answerQuiz(id)
-    else setSelected(id)
-  }, [mode, answerQuiz])
+    else { setSelected(id); if (id in zonesOf(view) === false || VIEW_OF[id]) setView(viewFor(id, view)) }
+  }, [mode, answerQuiz, view])
 
-  const next = () => { setRound(newRound(round.target)); setAnswer(null); setSelected(null) }
+  const next = () => { const r = newRound(round.target); setRound(r); setView(viewFor(r.target, view)); setAnswer(null); setSelected(null) }
   const changeMode = (m: Mode) => {
     setMode(m); setSelected(null); setAnswer(null)
-    if (m === 'autoevaluacion') { setRound(newRound()); setLabels(false) } else setLabels(true)
+    if (m === 'autoevaluacion') { const r = newRound(); setRound(r); setView(viewFor(r.target, view)); setLabels(false) } else setLabels(true)
   }
 
   const target = STRUCTURE_BY_ID[round.target]
@@ -63,12 +66,12 @@ export default function Atlas() {
   return (
     <div>
       <SectionHeader n={2} eyebrow="Atlas anatómico interactivo" title="Osteología y superficies articulares"
-        lead="Esquema original de la muñeca derecha en vista palmar. Toca cualquier zona del dibujo para abrir su ficha. La ulna no contacta con el carpo: entre ambos se interpone el disco articular." />
+        lead="Imágenes elaboradas a partir de modelos reales de BodyParts3D (CC BY 4.0): muñeca derecha en vistas palmar, dorsal y distal del radio y la ulna. Toca cualquier zona para abrir su ficha. La ulna no contacta con el carpo: entre ambos se interpone el disco articular." />
 
       <div className="mb-5 flex flex-wrap items-center gap-2" role="toolbar" aria-label="Controles del atlas">
         <Tabs<Mode> label="Modo" value={mode} onChange={changeMode} items={[
-          { id: 'estudio', label: 'Modo de estudio', icon: <BookOpen className="size-4" /> },
-          { id: 'autoevaluacion', label: 'Modo de autoevaluación', icon: <GraduationCap className="size-4" /> },
+          { id: 'estudio', label: 'Modo de estudio', short: 'Estudio', icon: <BookOpen className="size-4" /> },
+          { id: 'autoevaluacion', label: 'Modo de autoevaluación', short: 'Autoevaluación', icon: <GraduationCap className="size-4" /> },
         ]} />
       </div>
       <div className="mb-5 flex flex-wrap gap-2">
@@ -79,14 +82,19 @@ export default function Atlas() {
         <Button variant="soft" onClick={reset} icon={<RotateCcw className="size-4" />}>Restablecer vista</Button>
       </div>
 
+      {mode === 'estudio' && (
+        <div className="mb-4"><Tabs<AtlasView> label="Vista del esquema" value={view} onChange={(v) => { setView(v); if (selected && !(selected in zonesOf(v)) && !(VIEW_OF[selected] === v)) setSelected(null) }} items={[
+          { id: 'palmar', label: 'Vista palmar', short: 'Palmar' }, { id: 'dorsal', label: 'Vista dorsal', short: 'Dorsal' }, { id: 'distal', label: 'Vista distal (superficie articular)', short: 'Distal' },
+        ]} /></div>
+      )}
       <div className="grid gap-5 lg:grid-cols-[1.7fr_1fr]">
         <div className="space-y-4">
           <Card className="relative overflow-hidden !p-2 sm:!p-4">
-            <AtlasFigure selected={selected} onSelect={onSelect} showLabels={labels && !quiz} highlightSurfaces={surfaces} target={quiz && !answer ? round.target : null} wide={wide} />
+            <AtlasFigure view={view} selected={selected} onSelect={onSelect} showLabels={labels && !quiz} highlightSurfaces={surfaces} target={quiz && !answer ? round.target : null} wide={wide} />
             {surfaces && (
               <ul className="mt-2 flex flex-wrap gap-x-5 gap-y-1 px-2 pb-1 text-xs text-ink-soft" aria-label="Leyenda de superficies">
-                <li className="flex items-center gap-2"><span className="size-3 rounded-sm bg-rose-deep/60" />Superficie proximal (radio + disco)</li>
-                <li className="flex items-center gap-2"><span className="h-1.5 w-4 rounded-full bg-steel-deep" />Superficie distal (escafoides, semilunar, piramidal)</li>
+                <li className="flex items-center gap-2"><span className="size-3 rounded-sm bg-[#8cb9df]" />Cartílago articular (radio, ulna y fila proximal del carpo): delimitación aproximada</li>
+                {view !== 'distal' && <li className="flex items-center gap-2"><span className="size-3 rounded-sm bg-rose-deep/60" />Disco articular (esquemático)</li>}
               </ul>
             )}
           </Card>
@@ -96,7 +104,7 @@ export default function Atlas() {
               <ul className="flex flex-wrap gap-2" aria-label="Lista de estructuras">
                 {STRUCTURES.map((s) => (
                   <li key={s.id}>
-                    <button type="button" aria-pressed={selected === s.id} onClick={() => setSelected(s.id)}
+                    <button type="button" aria-pressed={selected === s.id} onClick={() => onSelect(s.id)}
                       className={cn('min-h-11 rounded-full border px-3.5 text-sm transition-colors', selected === s.id ? 'border-deep bg-deep text-white' : 'border-line bg-warm hover:border-sage')}>
                       <span className="mr-1.5 text-xs opacity-60">{s.num}</span>{s.nombre.replace(' (fibrocartílago triangular)', '')}
                     </button>

@@ -45,7 +45,7 @@ export default function Ligaments() {
           <Card className="!p-2 sm:!p-4">
             <LigamentFigure view={view} selected={selected} onSelect={setSelected} cat={cat} />
             <p className="px-2 pb-1 text-center text-xs text-ink-soft">
-              {view === 'palmar' ? 'Vista palmar: radio a la izquierda.' : 'Vista dorsal (el dibujo se refleja): radio a la derecha.'} Los ligamentos interóseos y el TFCC se ven por transparencia.
+              {view === 'palmar' ? 'Vista palmar: radio a la izquierda.' : 'Vista dorsal: radio a la derecha.'} Huesos reales (BodyParts3D, CC BY 4.0); ligamentos y disco esquemáticos, con inserciones aproximadas; los interóseos y el disco se ven sobre el hueso por transparencia.
             </p>
           </Card>
           <ul className="flex flex-wrap gap-2" aria-label="Lista de ligamentos">
@@ -109,12 +109,13 @@ export default function Ligaments() {
         </div>
         <div className="grid gap-4 md:grid-cols-2">
           <Card className="!p-3">
-            <p className="mb-1 px-2 text-sm font-semibold text-deep-700">Carpo normal</p>
-            <LigamentFigure view="palmar" selected="escafolunar" cat="todos" only={['escafolunar', 'lunopiramidal']} viewBox="60 290 400 230" interactive={false} />
+            <p className="mb-1 px-2 text-sm font-semibold text-deep-700">Carpo normal (vista dorsal)</p>
+            <LigamentFigure view="dorsal" selected="escafolunar" cat="todos" only={['escafolunar', 'lunopiramidal']} crop={[1.2, -2.6]} interactive={false} />
           </Card>
           <Card className="!p-3 border-rose/70">
             <p className="mb-1 px-2 text-sm font-semibold text-rose-deep">Falla del ligamento escafolunar (esquema)</p>
-            <LigamentFigure view="palmar" selected="escafolunar" cat="todos" only={['escafolunar', 'lunopiramidal']} failure viewBox="60 290 400 230" interactive={false} />
+            <LigamentFigure view="dorsal" selected="escafolunar" cat="todos" only={['escafolunar', 'lunopiramidal']} failure crop={[1.2, -2.6]} interactive={false} />
+            <p className="px-2 pt-1 text-xs text-ink-soft">Rojo punteado: ligamento escafolunar roto. Consecuencia (no dibujada): el escafoides se flexiona y el semilunar se extiende (DISI).</p>
           </Card>
         </div>
         <Card className="mt-4">

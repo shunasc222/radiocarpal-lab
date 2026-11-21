@@ -4,32 +4,35 @@ import { Droplets, Zap } from 'lucide-react'
 import { Badge, Button, Card, Field, SectionHeader, Tabs, Toggle } from '../components/ui/ui'
 import NeuroVascularFigure, { ART, NERVE } from '../components/figure/NeuroVascularFigure'
 import { NV_BY_ID, NV_ITEMS, SCAPHOID_VASC, type NVKind } from '../data/neurovascular'
-import { BONE_PATHS } from '../data/wristGeometry'
+import { PLATES } from '../data/plates.generated'
+import { LM } from '../data/landmarks3d'
+import { f1, proj } from '../components/figure/plateGeo'
+const BASE = import.meta.env.BASE_URL
 import { cn } from '../lib/utils'
 
 type Tab = 'vascular' | 'nervioso'
 
 function ScaphoidInset() {
   const [fx, setFx] = useState(false)
+  const P = PLATES.scaphoid, z = P.zones.escafoides
+  const [px, py] = proj('scaphoid', LM.escafoides.proximalPole[0], LM.escafoides.proximalPole[1], LM.escafoides.proximalPole[2])
+  const [tx, ty] = proj('scaphoid', LM.escafoides.tubercle[0], LM.escafoides.tubercle[1], LM.escafoides.tubercle[2])
+  const mx = (px + tx) / 2, my = (py + ty) / 2, ax = px - tx, ay = py - ty, len = Math.hypot(ax, ay), ux = ax / len, uy = ay / len
+  const nx = -uy, ny = ux, hw = 90
+  const half = `M${f1(mx + nx * hw)} ${f1(my + ny * hw)}L${f1(mx - nx * hw)} ${f1(my - ny * hw)}L${f1(mx - nx * hw + ux * 260)} ${f1(my - ny * hw + uy * 260)}L${f1(mx + nx * hw + ux * 260)} ${f1(my + ny * hw + uy * 260)}Z`
   return (
     <Card className="!p-5">
       <h3 className="text-2xl">{SCAPHOID_VASC.titulo}</h3>
-      <div className="mt-3 grid items-center gap-4 sm:grid-cols-[220px_1fr]">
+      <div className="mt-3 grid items-center gap-4 sm:grid-cols-[240px_1fr]">
         <div>
-          <svg viewBox="90 330 190 170" role="img" aria-label="Escafoides con sus aportes vasculares y fractura simulada de la cintura" className="mx-auto block w-full max-w-[260px]">
-            <defs><clipPath id="sc"><path d={BONE_PATHS.escafoides} /></clipPath></defs>
-            <path d={BONE_PATHS.escafoides} fill="#f2d6df" stroke="#a8587a" strokeWidth="2" />
-            <g clipPath="url(#sc)">
-              <polygon points="166,383 217,451 300,451 300,320 166,320" fill="#6b7280" opacity={fx ? 0.55 : 0} style={{ transition: 'opacity .4s' }} />
-            </g>
-            {/* ramas dorsales (entran distalmente) */}
-            <path d="M118 478 C122 458 138 446 158 440" stroke={ART} strokeWidth="3.5" fill="none" strokeLinecap="round" />
-            <path d="M158 440 C190 420 214 400 236 376" stroke={ART} strokeWidth="2.5" fill="none" strokeDasharray="5 5" strokeLinecap="round" />
-            <path d="M120 472 C112 486 120 494 134 492" stroke={ART} strokeWidth="2.5" fill="none" strokeLinecap="round" opacity=".7" />
-            {fx && <path d="M166 383 L217 451" stroke="#c0392b" strokeWidth="3.5" strokeLinecap="round" />}
-            {fx && <text x="222" y="466" fontSize="9" fill="#c0392b" fontWeight="700">fractura</text>}
-            <text x="214" y="362" fontSize="9" fill="#303542" fontWeight="600">polo proximal</text>
-            <text x="94" y="500" fontSize="9" fill="#a8587a" fontWeight="600">ramas de la a. radial</text>
+          <svg viewBox={`0 0 ${P.w} ${P.h}`} role="img" aria-label="Escafoides real con su aporte vascular esquemático y fractura simulada de la cintura" className="mx-auto block w-full max-w-[280px] rounded-2xl bg-cream">
+            <defs><clipPath id="sc"><path d={z.d} fillRule="evenodd" /></clipPath></defs>
+            <image href={`${BASE}atlas/scaphoid.webp`} x="0" y="0" width={P.w} height={P.h} />
+            <g clipPath="url(#sc)"><path d={half} fill="#4b5563" opacity={fx ? 0.6 : 0} style={{ transition: 'opacity .4s' }} /></g>
+            <path d={`M${f1(tx - ux * 6 + nx * 22)} ${f1(ty - uy * 6 + ny * 22)}C${f1(mx + nx * 30)} ${f1(my + ny * 30)} ${f1(mx + ux * 40 + nx * 24)} ${f1(my + uy * 40 + ny * 24)} ${f1(px - ux * 14 + nx * 8)} ${f1(py - uy * 14 + ny * 8)}`} stroke={ART} strokeWidth="4" fill="none" strokeLinecap="round" strokeDasharray="8 7" />
+            {fx && <path d={`M${f1(mx + nx * hw)} ${f1(my + ny * hw)}L${f1(mx - nx * hw)} ${f1(my - ny * hw)}`} stroke="#c0392b" strokeWidth="4" strokeLinecap="round" />}
+            <text x={f1(px - 50)} y={f1(py - 34)} fontSize="15" fontWeight="700" fill="#303542" stroke="#faf7f2" strokeWidth="3" paintOrder="stroke">polo proximal</text>
+            <text x={f1(tx - 10)} y={f1(ty + 44)} fontSize="14" fontWeight="700" fill="#a8587a" stroke="#faf7f2" strokeWidth="3" paintOrder="stroke">rama de la a. radial (esquema)</text>
           </svg>
           <Toggle pressed={fx} tone="rose" onClick={() => setFx((v) => !v)} className="mt-2 w-full justify-center">{fx ? 'Fractura simulada' : 'Simular fractura de la cintura'}</Toggle>
         </div>
@@ -38,7 +41,7 @@ function ScaphoidInset() {
             {SCAPHOID_VASC.puntos.map((p) => <li key={p} className="flex gap-2"><span className="mt-2 size-1.5 shrink-0 rounded-full bg-rose-deep" />{p}</li>)}
           </ul>
           {fx && <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-3 rounded-xl bg-rose/40 p-3 text-sm font-medium text-rose-deep" data-testid="scaphoid-warning">El fragmento proximal (en gris) pierde su irrigación: riesgo de necrosis avascular y pseudoartrosis.</motion.p>}
-          <p className="mt-3 text-xs text-ink-soft">{SCAPHOID_VASC.nota}</p>
+          <p className="mt-3 text-xs text-ink-soft">{SCAPHOID_VASC.nota} Hueso: BodyParts3D (CC BY 4.0); el trayecto vascular es esquemático.</p>
         </div>
       </div>
     </Card>
@@ -62,7 +65,7 @@ export default function Neurovascular() {
   return (
     <div>
       <SectionHeader n={6} eyebrow="Vascularización e inervación" title="Vasos y nervios de la muñeca"
-        lead="Las arterias se muestran en rojo y los nervios en lila. Los trayectos punteados son profundos o dorsales. Selecciona un elemento para ver su territorio y su relevancia clínica." />
+        lead="Las arterias se muestran en rojo y los nervios en amarillo. Los trayectos punteados son profundos o dorsales. Selecciona un elemento para ver su territorio y su relevancia clínica." />
       <div className="mb-5 flex flex-wrap items-center gap-3">
         <Tabs<Tab> label="Sistema" value={tab} onChange={changeTab} items={[
           { id: 'vascular', label: 'Sistema vascular', icon: <Droplets className="size-4" /> },

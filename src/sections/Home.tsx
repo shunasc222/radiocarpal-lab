@@ -16,7 +16,7 @@ const CARDS: { id: SectionId; titulo: string; texto: string; icon: React.ReactNo
 export default function Home({ go }: { go: (id: SectionId) => void }) {
   return (
     <div>
-      <section className="relative grid items-center gap-8 overflow-hidden rounded-[2rem] border border-line bg-warm/70 px-5 py-8 shadow-soft sm:px-10 sm:py-12 lg:grid-cols-[1fr_1fr]" aria-labelledby="main-heading">
+      <section className="relative grid items-center gap-8 overflow-hidden rounded-[2rem] border border-line bg-warm/70 px-5 py-8 shadow-soft sm:px-10 sm:py-12 lg:grid-cols-[0.85fr_1.15fr]" aria-labelledby="main-heading">
         <div aria-hidden className="pointer-events-none absolute -right-24 -top-24 size-80 rounded-full bg-rose/40 blur-3xl" />
         <div aria-hidden className="pointer-events-none absolute -bottom-24 -left-16 size-72 rounded-full bg-steel/40 blur-3xl" />
         <motion.div initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }} className="relative">
@@ -30,11 +30,11 @@ export default function Home({ go }: { go: (id: SectionId) => void }) {
             <Button variant="outline" size="lg" onClick={() => go('evaluacion')}>INICIAR AUTOEVALUACIÓN</Button>
           </div>
         </motion.div>
-        <motion.div initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.7, delay: 0.1 }} className="relative mx-auto w-full max-w-[560px]">
+        <motion.div initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.7, delay: 0.1 }} className="relative mx-auto w-full max-w-[640px]">
           <div className="float">
-            <AtlasFigure selected={null} showLabels highlightSurfaces={false} wide viewBox="-100 -14 620 720" onlyLabels={HERO_LABELS} interactive={false} />
+            <AtlasFigure view="palmar" selected={null} showLabels highlightSurfaces={false} wide labelMargin={215} onlyLabels={HERO_LABELS} interactive={false} />
           </div>
-          <p className="mt-1 text-center text-[11px] text-ink-soft">Esquema original · muñeca derecha · vista palmar</p>
+          <p className="mt-1 text-center text-[11px] text-ink-soft">Imagen elaborada con modelos de BodyParts3D (CC BY 4.0) · muñeca derecha · vista palmar</p>
         </motion.div>
       </section>
 

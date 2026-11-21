@@ -84,7 +84,7 @@ export default function Myology() {
                   </motion.div>
                 ) : (
                   <motion.div key="e" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                    <Card className="grid min-h-48 place-items-center text-center"><div><p className="font-serif text-2xl text-deep-700">Selecciona un músculo</p><p className="mt-2 text-sm text-ink-soft">En el esquema se dibuja su recorrido: círculo = origen, cuadrado = inserción.</p></div></Card>
+                    <Card className="grid min-h-48 place-items-center text-center"><div><p className="font-serif text-2xl text-deep-700">Selecciona un músculo</p><p className="mt-2 text-sm text-ink-soft">En la imagen se resalta su silueta real y se marca el punto de inserción (cuadrado). El origen queda fuera del recorte.</p></div></Card>
                   </motion.div>
                 )}
               </AnimatePresence>

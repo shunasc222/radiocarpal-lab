@@ -10,10 +10,12 @@ import Neurovascular from './sections/Neurovascular'
 import Cases from './sections/Cases'
 import Assessment from './sections/Assessment'
 
+const PlateHarness = lazy(() => import('./dev/PlateHarness'))
 const Explorer3D = lazy(() => import('./sections/Explorer3D'))
 
 export default function App() {
   const { section, go, visited } = useRoute()
+  if (window.location.hash.startsWith('#/__plate')) return <Suspense fallback={null}><PlateHarness /></Suspense>
   return (
     <ToastProvider>
       <Shell section={section} go={go} visited={visited}>

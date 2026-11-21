@@ -88,7 +88,7 @@ function TubeItem({ id, pts, r, color, s, ex, layerOn, opacity, rough = 0.45, gr
 }
 
 /* ───────── disco articular (esquemático) ───────── */
-const DISC = { c: [0.4, -0.07, -0.1] as const, rx: 0.72, rz: 0.72, t: 0.2 }
+import { DISC } from '../figure/plateGeo'
 function discGeometry() {
   const g = new THREE.CylinderGeometry(1, 1, 1, 64, 4, false)
   const p = g.attributes.position

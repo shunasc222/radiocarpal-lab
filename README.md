@@ -7,6 +7,9 @@ Aplicación web estática (React + TypeScript + Vite + Tailwind + Three.js/React
 ## Módulos
 1 Inicio · 2 Atlas anatómico · 3 **Explorador 3D por capas** (osteología, superficies articulares, ligamentos, miología, vasos y nervios) · 4 Ligamentos y estabilidad · 5 Miología y biomecánica (simulador) · 6 Vascularización e inervación · 7 Casos clínicos (3) · 8 Autoevaluación (20 preguntas), bibliografía APA y créditos.
 
+## Ilustraciones 2D
+Atlas, ligamentos, vasos/nervios y músculos usan láminas renderizadas a partir de los mismos modelos 3D reales (vistas palmar, dorsal y distal del radio y la ulna); las zonas interactivas son las siluetas reales de cada estructura. Ligamentos, disco, vasos y nervios se superponen de forma esquemática. No se incluye ninguna lámina de libro.
+
 ## Modelo 3D: qué es real y qué es esquemático
 - **Mallas reales (BodyParts3D 4.0, CC BY 4.0):** radio, ulna, 8 huesos del carpo, 5 bases metacarpianas, músculos (flexor radial del carpo, palmar largo, extensor radial largo y corto, extensor ulnar), retináculo flexor, membrana interósea.
 - **Esquemático:** disco articular, ligamentos, flexor ulnar del carpo (solo el tendón), arterias, venas y nervios. No existen en ese conjunto de datos; se calculan con `scripts/build-models.mjs` por trazado de rayos sobre la superficie de los huesos reales (inserciones y recorridos aproximados). El tinte de cartílago es una delimitación aproximada derivada de normales y altura.
@@ -19,7 +22,8 @@ npm run dev           # desarrollo
 npm run build         # tipos + producción en dist/
 npm test              # pruebas unitarias y de componentes (Vitest)
 npm run test:e2e      # E2E en Chromium (requiere build previo y Playwright)
-npm run build:models  # regenera public/models/*.glb y src/data/*generated*.ts (usa @somakine/bodyparts3d-musculoskeletal)
+npm run build:models  # regenera public/models/*.glb y src/data/{landmarks3d,anatomy3d.generated}.ts (usa @somakine/bodyparts3d-musculoskeletal)
+npm run build:plates  # (tras npm run build) regenera las láminas 2D public/atlas/*.webp y src/data/plates.generated.ts desde los modelos 3D
 ```
 
 ## Publicar en Vercel

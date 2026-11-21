@@ -1,78 +1,64 @@
+import { PATHS } from '../../data/anatomy3d.generated'
+import { LM } from '../../data/landmarks3d'
+import { PLATES } from '../../data/plates.generated'
 import { MUSCLES } from '../../data/muscles'
+import { f1, linePath, proj, type PlateKey } from '../figure/plateGeo'
 import { cn } from '../../lib/utils'
-import { BaseBones, BoneDefs } from '../figure/Bones'
 
-/** Geometría (vista palmar). En la vista dorsal se refleja el dibujo completo. */
-const GEOM: Record<string, { d: string; o: [number, number]; i: [number, number] }> = {
-  fcr: { d: 'M346 44 C332 150 272 300 234 420 C216 480 200 560 190 608', o: [346, 44], i: [190, 608] },
-  fcu: { d: 'M354 46 C348 200 338 380 326 516', o: [354, 46], i: [326, 516] },
-  pl: { d: 'M340 48 C332 200 272 380 254 538', o: [340, 48], i: [254, 538] },
-  ecrl: { d: 'M128 36 C130 170 150 330 172 430 C180 500 184 560 188 610', o: [128, 36], i: [188, 610] },
-  ecrb: { d: 'M140 46 C160 180 195 330 212 430 C220 500 224 560 228 610', o: [140, 46], i: [228, 610] },
-  ecu: { d: 'M148 48 C212 160 302 300 320 430 C324 500 326 560 326 620', o: [148, 48], i: [326, 620] },
+const BASE = import.meta.env.BASE_URL
+const FLEX = '#a8587a', EXT = '#4f7391'
+
+/** Último punto (más distal) del trazado de una zona: sirve de marcador de inserción. */
+function lowest(d: string): [number, number] {
+  let best: [number, number] = [0, 0]
+  for (const m of d.matchAll(/(-?\d+(?:\.\d+)?) (-?\d+(?:\.\d+)?)/g)) { const y = Number(m[2]); if (y > best[1]) best = [Number(m[1]), y] }
+  return best
 }
-export const MUSCLE_W = 470
-
-const FLEX = '#a8587a'
-const EXT = '#4f7391'
 
 export default function MuscleFigure({ view, selected, onSelect }: { view: 'palmar' | 'dorsal'; selected: string | null; onSelect: (id: string) => void }) {
-  const mirror = view === 'dorsal'
-  const mx = (x: number) => (mirror ? MUSCLE_W - x : x)
+  const key = (view === 'palmar' ? 'palmar-muscles' : 'dorsal-muscles') as PlateKey, P = PLATES[key]
   const visible = MUSCLES.filter((m) => (view === 'palmar' ? m.grupo === 'flexor' : m.grupo === 'extensor'))
-  const sel = selected ? MUSCLES.find((m) => m.id === selected) : null
+  const y1 = (P.a1 + 4.2) * P.S
+  const ins = (id: string): [number, number] | null => {
+    if (id === 'fcr') return proj(key, LM.mc2.baseVolar[0], LM.mc2.baseVolar[1], LM.mc2.baseVolar[2])
+    if (id === 'ecrl') return proj(key, LM.mc2.baseDorsal[0], LM.mc2.baseDorsal[1], LM.mc2.baseDorsal[2])
+    if (id === 'ecrb') return proj(key, LM.mc3.baseDorsal[0], LM.mc3.baseDorsal[1], LM.mc3.baseDorsal[2])
+    if (id === 'ecu') return proj(key, LM.mc5.baseDorsal[0], LM.mc5.baseDorsal[1], LM.mc5.baseDorsal[2])
+    if (id === 'fcu') { const p = PATHS.fcu.pts[PATHS.fcu.pts.length - 1]; return proj(key, p[0], p[1], p[2]) }
+    if (id === 'pl') return P.zones.pl ? lowest(P.zones.pl.d) : null
+    return null
+  }
   return (
-    <svg viewBox="0 -4 470 696" role="group" aria-label={`Esquema de los músculos de la muñeca, vista ${view}`} className="block h-auto w-full select-none">
-      <BoneDefs />
-      <g transform={mirror ? `translate(${MUSCLE_W} 0) scale(-1 1)` : undefined}>
-        {/* húmero distal y huesos del antebrazo */}
-        <g filter="url(#soft-shadow)" aria-hidden>
-          <path d="M104 0 H372 V30 C372 52 340 62 322 62 H154 C136 62 104 52 104 30 Z" fill="url(#g-bone)" stroke="#8a8f7a" strokeWidth="1.6" />
-          <path d="M158 70 H222 C222 150 224 200 220 252 H160 C158 200 160 140 158 70 Z" fill="url(#g-bone)" stroke="#8a8f7a" strokeWidth="1.6" />
-          <path d="M262 80 H310 C310 150 312 200 310 252 H264 C262 200 264 140 262 80 Z" fill="url(#g-bone)" stroke="#8a8f7a" strokeWidth="1.6" />
-          <g transform="translate(60 250) scale(0.62)"><BaseBones /></g>
-        </g>
-        <circle cx="126" cy="38" r="11" fill="#ebc7d4" stroke="#a8587a" /><circle cx="352" cy="38" r="11" fill="#ebc7d4" stroke="#a8587a" />
-
-        {MUSCLES.map((m) => {
-          const g = GEOM[m.id]
-          const isSel = selected === m.id
-          const inView = visible.includes(m)
-          const color = m.grupo === 'flexor' ? FLEX : EXT
-          return (
-            <g key={m.id} opacity={inView ? (selected && !isSel ? 0.35 : 1) : 0.08} pointerEvents={inView ? 'all' : 'none'}>
-              {isSel && <path d={g.d} fill="none" stroke="#7a64a3" strokeOpacity=".3" strokeWidth="20" strokeLinecap="round" />}
-              <path d={g.d} fill="none" stroke={color} strokeWidth={isSel ? 9 : 6} strokeLinecap="round" />
-              <path
-                d={g.d} fill="none" stroke="transparent" strokeWidth="28" strokeLinecap="round" pointerEvents="stroke" className="zone"
-                role="button" tabIndex={inView ? 0 : -1} aria-label={m.nombre} aria-pressed={isSel}
-                onClick={() => onSelect(m.id)}
-                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSelect(m.id) } }}
-              />
-              {isSel && (
-                <>
-                  <circle cx={g.o[0]} cy={g.o[1]} r="9" fill="#fff" stroke={color} strokeWidth="3" />
-                  <rect x={g.i[0] - 8} y={g.i[1] - 8} width="16" height="16" rx="3" fill={color} stroke="#fff" strokeWidth="2" />
-                </>
-              )}
-            </g>
-          )
-        })}
-      </g>
-      <text x={mx(126)} y="-8" textAnchor="middle" fontSize="12" fill="#5b6272">Epicóndilo lateral</text>
-      <text x={mx(352)} y="-8" textAnchor="middle" fontSize="12" fill="#5b6272">Epicóndilo medial</text>
-      {sel && (() => {
-        const g = GEOM[sel.id]
+    <svg viewBox={`0 0 ${P.w} ${y1}`} role="group" aria-label={`Músculos de la muñeca sobre los huesos reales, vista ${view}`} className="block h-auto w-full select-none">
+      <image href={`${BASE}atlas/${key}.webp`} x="0" y="0" width={P.w} height={P.h} />
+      {view === 'palmar' && (() => {
+        const sel = selected === 'fcu'
         return (
-          <g fontSize="12" fontWeight="600" fill="#303542">
-            <text x={mx(g.o[0]) + (mirror ? -16 : 16)} y={g.o[1] + 36} textAnchor={mirror ? 'end' : 'start'}>● Origen</text>
-            <text x={mx(g.i[0]) + (mx(g.i[0]) > 235 ? 16 : -16)} y={g.i[1] + 26} textAnchor={mx(g.i[0]) > 235 ? 'start' : 'end'}>■ Inserción</text>
+          <g opacity={selected && !sel ? 0.4 : 1}>
+            {sel && <path d={linePath(key, PATHS.fcu.pts)} fill="none" stroke="#7a64a3" strokeOpacity=".3" strokeWidth="26" strokeLinecap="round" />}
+            <path d={linePath(key, PATHS.fcu.pts)} fill="none" stroke="#e6d6b4" strokeWidth="11" strokeLinecap="round" strokeDasharray="14 8" />
+            <path d={linePath(key, PATHS.fcu.pts)} fill="none" stroke="transparent" strokeWidth="34" strokeLinecap="round" pointerEvents="stroke" className="zone" role="button" tabIndex={0} aria-label="Flexor ulnar del carpo" aria-pressed={sel}
+              onClick={() => onSelect('fcu')} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSelect('fcu') } }} />
           </g>
         )
       })()}
-      <g className={cn()} fontSize="11" fill="#5b6272" aria-hidden>
-        <text x={mirror ? 452 : 18} y="670" textAnchor={mirror ? 'end' : 'start'}>{mirror ? 'Radio a la derecha' : 'Radio a la izquierda'}</text>
-      </g>
+      {visible.map((m) => {
+        const z = P.zones[m.id]; if (!z) return null
+        const isSel = selected === m.id, col = m.grupo === 'flexor' ? FLEX : EXT
+        const p = isSel ? ins(m.id) : null
+        return (
+          <g key={m.id}>
+            <path d={z.d} fillRule="evenodd" className="zone" role="button" tabIndex={0} aria-label={m.nombre} aria-pressed={isSel}
+              fill={isSel ? '#7a64a3' : '#fff'} fillOpacity={isSel ? 0.3 : 0} stroke={isSel ? col : 'transparent'} strokeWidth={isSel ? 3.5 : 0} strokeLinejoin="round"
+              onClick={() => onSelect(m.id)} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSelect(m.id) } }} />
+            {p && <g aria-hidden><rect x={f1(p[0]) - 9} y={f1(p[1]) - 9} width="18" height="18" rx="3" fill={col} stroke="#fff" strokeWidth="2.5" /><text x={f1(p[0]) + 16} y={f1(p[1]) + 5} fontSize="15" fontWeight="700" fill="#303542" stroke="#faf7f2" strokeWidth="4" paintOrder="stroke">inserción</text></g>}
+          </g>
+        )
+      })}
+      {selected === 'fcu' && (() => { const p = ins('fcu'); return p && <g aria-hidden><rect x={f1(p[0]) - 9} y={f1(p[1]) - 9} width="18" height="18" rx="3" fill={FLEX} stroke="#fff" strokeWidth="2.5" /><text x={f1(p[0]) + 16} y={f1(p[1]) + 5} fontSize="15" fontWeight="700" fill="#303542" stroke="#faf7f2" strokeWidth="4" paintOrder="stroke">inserción (pisiforme)</text></g> })()}
+      <text x={view === 'palmar' ? 12 : P.w - 12} y="24" textAnchor={view === 'palmar' ? 'start' : 'end'} fontSize="15" fontWeight="600" fill="#5b6272" letterSpacing="1.2">{view === 'palmar' ? 'VISTA PALMAR · RADIO A LA IZQUIERDA' : 'VISTA DORSAL · RADIO A LA DERECHA'}</text>
+      <text x={view === 'palmar' ? 12 : P.w - 12} y="46" textAnchor={view === 'palmar' ? 'start' : 'end'} fontSize="13" fill="#5b6272">↑ el origen está en el epicóndilo (fuera de la imagen)</text>
+      <g className={cn()} />
     </svg>
   )
 }
