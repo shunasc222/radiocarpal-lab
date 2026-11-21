@@ -1,0 +1,19 @@
+MODELOS 3D DE RADIOCARPAL LAB
+
+Los huesos (radio, ulna, escafoides, semilunar, piramidal, pisiforme, trapecio, trapezoide, hueso grande, ganchoso, metacarpianos),
+los músculos (flexor radial del carpo, palmar largo, extensor radial largo y corto del carpo, extensor ulnar del carpo),
+el retináculo flexor y la membrana interósea provienen de:
+
+  BodyParts3D 4.0, © The Database Center for Life Science, licenciado bajo Creative Commons Attribution 4.0 International (CC BY 4.0)
+  https://dbarchive.biosciencedbc.jp/en/bodyparts3d/lic.html
+  Licencia: https://creativecommons.org/licenses/by/4.0/
+
+Obtenidos mediante el paquete npm @somakine/bodyparts3d-musculoskeletal (CC BY 4.0), que reorganiza los OBJ originales en GLB.
+
+MODIFICACIONES realizadas por RADIOCARPAL LAB (scripts/build-models.mjs):
+  - selección de la extremidad superior derecha y cambio de unidades/ejes;
+  - suavizado por subdivisión Loop de los huesos; recorte de radio, ulna, metacarpianos y músculos con tapa plana;
+  - recálculo de normales; máscara aproximada del cartílago articular (derivada de la geometría) y del tramo tendinoso de cada músculo.
+
+NO provienen de BodyParts3D (son esquemáticos, construidos a partir de puntos de referencia calculados sobre los huesos reales):
+  disco articular, ligamentos radiocarpianos/ulnocarpianos/intercarpianos, flexor ulnar del carpo, arterias, venas y nervios.
