@@ -2,6 +2,7 @@ import { useCallback, useMemo, useState } from 'react'
 import { motion } from 'motion/react'
 import { Check, Eye, EyeOff, GraduationCap, Layers, RotateCcw, BookOpen, X as XIcon, ArrowRight } from 'lucide-react'
 import { Badge, Button, Card, SectionHeader, Tabs, Toggle, useToast } from '../components/ui/ui'
+import { FigurePanel } from '../components/ui/FigurePanel'
 import { StructureCard } from '../components/ui/InfoCard'
 import AtlasFigure, { VIEW_OF, zonesOf, type AtlasView } from '../components/figure/AtlasFigure'
 import { STRUCTURES, STRUCTURE_BY_ID, SURFACES } from '../data/structures'
@@ -87,9 +88,9 @@ export default function Atlas() {
           { id: 'palmar', label: 'Vista palmar', short: 'Palmar' }, { id: 'dorsal', label: 'Vista dorsal', short: 'Dorsal' }, { id: 'distal', label: 'Vista distal (superficie articular)', short: 'Distal' },
         ]} /></div>
       )}
-      <div className="grid gap-5 lg:grid-cols-[1.7fr_1fr]">
+      <div className="grid gap-5 lg:grid-cols-[2fr_1fr]">
         <div className="space-y-4">
-          <Card className="relative overflow-hidden !p-2 sm:!p-4">
+          <FigurePanel caption="Imagen elaborada con modelos reales de BodyParts3D (CC BY 4.0) · muñeca derecha">
             <AtlasFigure view={view} selected={selected} onSelect={onSelect} showLabels={labels && !quiz} highlightSurfaces={surfaces} target={quiz && !answer ? round.target : null} wide={wide} />
             {surfaces && (
               <ul className="mt-2 flex flex-wrap gap-x-5 gap-y-1 px-2 pb-1 text-xs text-ink-soft" aria-label="Leyenda de superficies">
@@ -97,7 +98,7 @@ export default function Atlas() {
                 {view !== 'distal' && <li className="flex items-center gap-2"><span className="size-3 rounded-sm bg-rose-deep/60" />Disco articular (esquemático)</li>}
               </ul>
             )}
-          </Card>
+          </FigurePanel>
           {mode === 'estudio' && (
             <div>
               <h2 className="mb-2 text-2xl">Todas las estructuras</h2>

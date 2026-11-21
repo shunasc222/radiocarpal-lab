@@ -5,11 +5,11 @@ export type ViewName = 'inicial' | 'palmar' | 'dorsal' | 'radial' | 'ulnar'
 
 export interface LayerDef { id: LayerId; n: number; nombre: string; corto: string; descripcion: string; color: string }
 export const LAYERS: LayerDef[] = [
-  { id: 'osteologia', n: 1, nombre: 'Osteología', corto: 'Huesos', descripcion: 'Radio y ulna distales, 8 huesos del carpo y bases metacarpianas.', color: '#e6dcc6' },
-  { id: 'superficies', n: 2, nombre: 'Superficies articulares', corto: 'Superficies', descripcion: 'Cartílago del radio, la ulna y la fila proximal del carpo; disco articular.', color: '#8fbbe0' },
-  { id: 'ligamentos', n: 3, nombre: 'Ligamentos', corto: 'Ligamentos', descripcion: 'Radiocarpianos, ulnocarpianos, colaterales, intercarpianos y retináculo flexor.', color: '#f4f0e6' },
-  { id: 'miologia', n: 4, nombre: 'Miología', corto: 'Músculos', descripcion: 'Músculos y tendones motores de la muñeca.', color: '#b94a48' },
-  { id: 'neurovascular', n: 5, nombre: 'Vasos y nervios', corto: 'Vasos/nervios', descripcion: 'Arterias, venas y nervios principales (didáctico).', color: '#d65a5a' },
+  { id: 'osteologia', n: 1, nombre: 'Osteología', corto: 'Huesos', descripcion: 'Radio y ulna distales, 8 huesos del carpo y bases metacarpianas.', color: '#dccdaa' },
+  { id: 'superficies', n: 2, nombre: 'Superficies articulares', corto: 'Superficies', descripcion: 'Cartílago del radio, la ulna y la fila proximal del carpo; disco articular.', color: '#79b5e0' },
+  { id: 'ligamentos', n: 3, nombre: 'Ligamentos', corto: 'Ligamentos', descripcion: 'Radiocarpianos, ulnocarpianos, colaterales, intercarpianos y retináculo flexor.', color: 'linear-gradient(135deg,#f2c4d4 0%,#f7f3ea 50%,#bcd6ea 100%)' },
+  { id: 'miologia', n: 4, nombre: 'Miología', corto: 'Músculos', descripcion: 'Músculos y tendones motores de la muñeca.', color: '#a8403f' },
+  { id: 'neurovascular', n: 5, nombre: 'Vasos y nervios', corto: 'Vasos/nervios', descripcion: 'Arterias, venas y nervios principales (didáctico).', color: 'linear-gradient(135deg,#cf2f2f 0 34%,#f0c53a 34% 67%,#3a6fc0 67%)' },
 ]
 
 export const BONE_IDS = ['radio', 'ulna', 'escafoides', 'semilunar', 'piramidal', 'pisiforme', 'trapecio', 'trapezoide', 'hueso_grande', 'ganchoso', 'mc1', 'mc2', 'mc3', 'mc4', 'mc5'] as const
@@ -26,9 +26,9 @@ export const BONE_GROUP: Record<BoneId, 'antebrazo' | 'proximal' | 'distal' | 'm
 }
 
 export const VIEWS: Record<ViewName, [number, number, number]> = {
-  inicial: [9, 5, 22], palmar: [0, 1.2, 23], dorsal: [0, 1.2, -23], radial: [-23, 1.2, 0], ulnar: [23, 1.2, 0],
+  inicial: [7, 4, 20.5], palmar: [0, 1, 21.5], dorsal: [0, 1, -21.5], radial: [-21.5, 1, 0], ulnar: [21.5, 1, 0],
 }
-export const TARGET: [number, number, number] = [-0.6, 1.4, 0.1]
+export const TARGET: [number, number, number] = [-0.6, 0.6, 0.1]
 
 /** Desplazamiento de «separar estructuras» de cada hueso (cm a explosión = 1). */
 export function explodeOffset(id: BoneId): [number, number, number] {
@@ -43,6 +43,6 @@ export function explodeOffset(id: BoneId): [number, number, number] {
 
 /** Colores anatómicos realistas. */
 export const COLORS = {
-  bone: '#d9ccb0', cartilage: '#8cb9df', disc: '#9cc3e2', ligament: '#f2eee3', tendon: '#eadfca', muscle: '#b4413f',
-  artery: '#c62d2d', vein: '#3c6fb5', nerve: '#e8c23a', retinaculum: '#ece4d0', select: '#7a64a3',
+  bone: '#dccdaa', cartilage: '#79b5e0', disc: '#8dc0e6', ligament: '#f3efe4', tendon: '#f7ede2', muscle: '#a8403f',
+  artery: '#cf2f2f', vein: '#3a6fc0', nerve: '#f0c53a', retinaculum: '#efe6d2', select: '#7a64a3', outline: '#5f533f',
 }

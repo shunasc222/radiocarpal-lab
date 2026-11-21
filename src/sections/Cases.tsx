@@ -5,9 +5,27 @@ import { Badge, Button, Card, Field, ProgressBar, SectionHeader, useToast } from
 import { CASES, type ClinicalCase } from '../data/cases'
 import type { SectionId } from '../lib/nav'
 import { shuffle, cn } from '../lib/utils'
+import { FigurePanel } from '../components/ui/FigurePanel'
+import AtlasFigure, { type AtlasView } from '../components/figure/AtlasFigure'
+
+const CASE_FIG: Record<string, { view: AtlasView; selected: string; surfaces: boolean; cap: string }> = {
+  escafoides: { view: 'palmar', selected: 'escafoides', surfaces: false, cap: 'Escafoides (resaltado): suelo de la tabaquera anatómica' },
+  tfcc: { view: 'palmar', selected: 'disco', surfaces: true, cap: 'Disco articular del TFCC (esquemático) entre la ulna y el carpo' },
+  'radio-distal': { view: 'distal', selected: 'superficie-articular', surfaces: true, cap: 'Superficie articular del radio distal vista desde distal' },
+}
 
 type Stage = 0 | 1 | 2
 const STAGES = ['Presentación clínica', 'Toma de decisiones', 'Explicación anatómica']
+
+function CaseFigure({ id }: { id: string }) {
+  const f = CASE_FIG[id]
+  if (!f) return null
+  return (
+    <FigurePanel caption={f.cap} className="self-start">
+      <AtlasFigure view={f.view} selected={f.selected} showLabels={false} highlightSurfaces={f.surfaces} wide={false} interactive={false} />
+    </FigurePanel>
+  )
+}
 
 function CasePlayer({ c, go, onDone }: { c: ClinicalCase; go: (id: SectionId) => void; onDone: () => void }) {
   const { toast } = useToast()
@@ -57,6 +75,8 @@ function CasePlayer({ c, go, onDone }: { c: ClinicalCase; go: (id: SectionId) =>
         <motion.div key={stage} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
           {stage === 0 && (
             <Card className="!p-5 sm:!p-7">
+              <div className="grid gap-6 md:grid-cols-[1.35fr_0.65fr]">
+              <div>
               <Badge tone="lilac">{c.paciente}</Badge>
               <h3 className="mt-3 text-3xl">Motivo de consulta</h3>
               <p className="mt-2 text-[16px]">{c.presentacion.motivo}</p>
@@ -71,6 +91,9 @@ function CasePlayer({ c, go, onDone }: { c: ClinicalCase; go: (id: SectionId) =>
                 <Field label="Estudios de imagen" tone="steel">{c.presentacion.imagenes}</Field>
               </dl>
               <Button variant="primary" className="mt-6" onClick={() => setStage(1)} icon={<ClipboardList className="size-4" />}>Pasar a la toma de decisiones</Button>
+              </div>
+              <CaseFigure id={c.id} />
+              </div>
             </Card>
           )}
 

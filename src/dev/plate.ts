@@ -6,7 +6,8 @@
 import * as THREE from 'three'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js'
-import { boneMaterial, muscleMaterial } from '../components/viewer3d/materials'
+import { boneMaterial, muscleMaterial, outlineMaterial } from '../components/viewer3d/materials'
+import { COLORS } from '../components/viewer3d/config'
 
 export type PlateView = 'palmar' | 'dorsal' | 'distal'
 export interface PlateFrame { S: number; x0: number; x1: number; a0: number; a1: number }
@@ -46,7 +47,7 @@ export async function renderPlate(cfg: PlateCfg) {
   renderer.outputColorSpace = ids ? THREE.LinearSRGBColorSpace : THREE.SRGBColorSpace
   renderer.setClearColor(0x000000, 0)
   const scene = new THREE.Scene()
-  if (!ids) { const pm = new THREE.PMREMGenerator(renderer); scene.environment = pm.fromScene(new RoomEnvironment(), 0.03).texture }
+  if (!ids) { const pm = new THREE.PMREMGenerator(renderer); scene.environment = pm.fromScene(new RoomEnvironment(), 0.03).texture; scene.environmentIntensity = 0.4 }
   const cx = (F.x0 + F.x1) / 2, ca = (F.a0 + F.a1) / 2, hw = (F.x1 - F.x0) / 2, ha = (F.a1 - F.a0) / 2
   const cam = new THREE.OrthographicCamera(-hw, hw, ha, -ha, 0.1, 200)
   if (cfg.view === 'palmar') { cam.position.set(cx, ca, 60); cam.up.set(0, 1, 0); cam.lookAt(cx, ca, 0) }
@@ -54,17 +55,23 @@ export async function renderPlate(cfg: PlateCfg) {
   else { cam.position.set(cx, -60, ca); cam.up.set(0, 0, 1); cam.lookAt(cx, 0, ca) }
   cam.updateProjectionMatrix()
   if (!ids) {
-    scene.add(new THREE.AmbientLight(0xffffff, 0.06))
-    const key = new THREE.DirectionalLight(0xffffff, 1.25); key.position.set(-9, 12, cfg.view === 'dorsal' ? -16 : 16); scene.add(key)
-    const rim = new THREE.DirectionalLight(0xffe9e0, 0.35); rim.position.set(12, -4, cfg.view === 'dorsal' ? -8 : 8); scene.add(rim)
-    const top = new THREE.DirectionalLight(0xdfe8ff, 0.6); top.position.set(0, 6, cfg.view === 'dorsal' ? 18 : -18); scene.add(top)
+    const sgn = cfg.view === 'dorsal' ? -1 : 1
+    const below = cfg.view === 'distal'
+    scene.add(new THREE.HemisphereLight(0xffffff, 0xb8a68a, 0.16))
+    const key = new THREE.DirectionalLight(0xfff6ea, 2.3); key.position.set(-9, below ? -14 : 12, below ? 8 : 17 * sgn); scene.add(key)
+    const fill = new THREE.DirectionalLight(0xffe2d6, 0.4); fill.position.set(13, below ? -6 : -3, below ? 10 : 9 * sgn); scene.add(fill)
+    const rim = new THREE.DirectionalLight(0xdbe6ff, 1.0); rim.position.set(-12, below ? -4 : 4, below ? 14 : -16 * sgn); scene.add(rim)
+    const rim2 = new THREE.DirectionalLight(0xffffff, 0.8); rim2.position.set(12, 8, -14 * sgn); scene.add(rim2)
   }
   const bones = await load(`${base}models/wrist-bones.glb`)
   const soft = await load(`${base}models/wrist-soft.glb`)
   const meshOf = (root: THREE.Group, n: string) => { let m: THREE.Mesh | null = null; root.traverse((o) => { if (o.name === n && (o as THREE.Mesh).isMesh) m = o as THREE.Mesh }); return m as THREE.Mesh | null }
   const zoneIds: string[] = ['ctx']
   const colorOf = (zone: string) => { let i = zoneIds.indexOf(zone); if (i < 0) { zoneIds.push(zone); i = zoneIds.length - 1 } return new THREE.Color().setRGB((i * 9 + 6) / 255, 0, 0, THREE.LinearSRGBColorSpace) }
-  const add = (geo: THREE.BufferGeometry, mat: THREE.Material) => { const m = new THREE.Mesh(geo, mat); scene.add(m) }
+  const add = (geo: THREE.BufferGeometry, mat: THREE.Material, outline = 0.03) => {
+    scene.add(new THREE.Mesh(geo, mat))
+    if (!ids && outline > 0) { const o = new THREE.Mesh(geo, outlineMaterial(COLORS.outline, outline, 0.6)); o.renderOrder = -1; scene.add(o) }
+  }
   const flat = (zone: string) => new THREE.MeshBasicMaterial({ color: colorOf(zone), side: THREE.DoubleSide })
 
   const distal = cfg.view === 'distal'
@@ -99,14 +106,14 @@ export async function renderPlate(cfg: PlateCfg) {
             delete parts[k]; Object.assign(parts, { ...Object.fromEntries(Object.entries(sub).map(([z, g]) => [z === k ? k : z, g])) })
           }
         }
-        for (const [z, g] of Object.entries(parts)) add(g, flat(z))
+        for (const [z, g] of Object.entries(parts)) add(g, flat(z), 0)
       } else if (id === 'ulna') {
         const parts = splitByZone(m, (x, y) => (y < 0.12 && x > 0.45 ? 'estiloides-ulnar' : 'ulna-distal'))
-        for (const [z, g] of Object.entries(parts)) add(g, flat(z))
-      } else if (['escafoides', 'semilunar', 'piramidal', 'pisiforme'].includes(id)) add(m.geometry, flat(id))
-      else add(m.geometry, flat('ctx'))
+        for (const [z, g] of Object.entries(parts)) add(g, flat(z), 0)
+      } else if (['escafoides', 'semilunar', 'piramidal', 'pisiforme'].includes(id)) add(m.geometry, flat(id), 0)
+      else add(m.geometry, flat('ctx'), 0)
     } else {
-      const mat = boneMaterial(); mat.setCartilage(cfg.mode === 'surf' ? 1 : 0.0); add(m.geometry, mat)
+      const mat = boneMaterial(); mat.setCartilage(cfg.mode === 'surf' ? 1 : 0.0); add(m.geometry, mat, 0.03)
     }
   }
   if (cfg.muscles || musclesOnly) {
@@ -116,7 +123,7 @@ export async function renderPlate(cfg: PlateCfg) {
       if (cfg.view === 'palmar' && !palmar) continue
       if (cfg.view === 'dorsal' && palmar) continue
       const m = meshOf(soft, id); if (!m) continue
-      add(m.geometry, ids ? flat(id) : muscleMaterial())
+      add(m.geometry, ids ? flat(id) : muscleMaterial(), ids ? 0 : 0.035)
     }
   }
   renderer.render(scene, cam)

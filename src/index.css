@@ -62,3 +62,9 @@ svg text { font-family: var(--font-sans); }
 .pulse { animation: pulse-ring 1.4s ease-in-out infinite; }
 @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
 .float { animation: float 6s ease-in-out infinite; }
+
+/* Paneles de ilustraciones anatómicas: fondo neutro para contraste con el marfil de los huesos */
+.plate-bg { background: radial-gradient(120% 90% at 50% 12%, #fbfcfd 0%, #eaeef3 52%, #d4dbe4 100%); }
+.plate-bg-deep { background: radial-gradient(120% 90% at 50% 12%, #eef2f6 0%, #d9e0e8 55%, #bcc7d4 100%); }
+.plate-bg svg image { filter: drop-shadow(0 7px 9px rgba(38, 50, 72, 0.28)) drop-shadow(0 1px 1px rgba(38, 50, 72, 0.35)); }
+.plate-svg-shadow { filter: drop-shadow(0 2px 2px rgba(38, 50, 72, 0.35)); }

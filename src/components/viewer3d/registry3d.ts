@@ -4,7 +4,7 @@ export const MUSCLE3D_NAME: Record<string, string> = {
   ecrl: 'Extensor radial largo del carpo', ecrb: 'Extensor radial corto del carpo', ecu: 'Extensor ulnar del carpo', fcr: 'Flexor radial del carpo', pl: 'Palmar largo', fcu: 'Flexor ulnar del carpo (esquema)',
 }
 export const LIG_COLOR: Record<string, string> = {
-  radiocarpiano: '#f2c4d4', ulnocarpiano: '#d0c1ea', colateral: '#bcd6ea', intercarpiano: '#cde3bb', radioulnar: '#f0d9a0',
+  radiocarpiano: '#eeb2c7', ulnocarpiano: '#c2b0e6', colateral: '#a6c9e8', intercarpiano: '#b5dba6', radioulnar: '#ebd085',
 }
 export const NV_COLOR = (id: string) => (id.startsWith('a-') ? COLORS.artery : id.startsWith('v-') ? COLORS.vein : COLORS.nerve)
 

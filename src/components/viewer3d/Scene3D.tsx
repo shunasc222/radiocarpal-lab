@@ -4,7 +4,7 @@ import { OrbitControls, useGLTF, useProgress } from '@react-three/drei'
 import * as THREE from 'three'
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js'
 import { BONE_IDS, BONE_NAME, COLORS, TARGET, VIEWS, explodeOffset, type BoneId, type LayerId, type ViewName } from './config'
-import { boneMaterial, muscleMaterial, setOpacity } from './materials'
+import { boneMaterial, muscleMaterial, outlineMaterial, setOpacity } from './materials'
 import Procedural from './Procedural'
 import { LabelSprite } from './LabelSprite'
 import { MUSCLE3D_NAME } from './registry3d'
@@ -29,6 +29,7 @@ function Environment() {
     const pm = new THREE.PMREMGenerator(gl)
     const env = pm.fromScene(new RoomEnvironment(), 0.03).texture
     scene.environment = env
+    scene.environmentIntensity = 0.4
     return () => { scene.environment = null; env.dispose(); pm.dispose() }
   }, [gl, scene])
   return null
@@ -36,7 +37,7 @@ function Environment() {
 
 function CameraRig({ view }: { view: { name: ViewName; nonce: number } }) {
   const { camera, controls, invalidate, size } = useThree()
-  const aspectK = size.width / size.height < 0.95 ? 1.35 : 1
+  const aspectK = size.width / size.height < 0.95 ? 1.5 : 1
   const goal = useRef<THREE.Vector3 | null>(null)
   const T = useMemo(() => new THREE.Vector3(...TARGET), [])
   useEffect(() => {
@@ -70,13 +71,15 @@ function useMeshes(url: string): Record<string, THREE.Mesh> {
   }, [gltf])
 }
 
-function Pickable({ id, geometry, material, selected, dim, onSelect, offset, visible, labelPos, label, children }: {
-  id: string; geometry: THREE.BufferGeometry; material: THREE.Material; selected: boolean; dim: boolean; onSelect: SceneState['onSelect']
+function Pickable({ id, geometry, material, selected, dim, onSelect, offset, visible, labelPos, label, children, outline = 0, opacity = 1 }: {
+  outline?: number; opacity?: number; id: string; geometry: THREE.BufferGeometry; material: THREE.Material; selected: boolean; dim: boolean; onSelect: SceneState['onSelect']
   offset: [number, number, number]; visible: boolean; labelPos?: [number, number, number]; label?: string; children?: React.ReactNode
 }) {
   const ref = useRef<THREE.Mesh>(null)
   const { invalidate } = useThree()
   const m = material as THREE.MeshStandardMaterial
+  const edge = useMemo(() => outlineMaterial(COLORS.outline, outline || 0.01, 0.5), [outline])
+  useEffect(() => { setOpacity(edge, 0.5 * opacity); edge.color.set(selected ? COLORS.select : COLORS.outline); edge.setThickness(selected ? outline * 2.2 : outline); invalidate() }, [selected, opacity, edge, outline, invalidate])
   useEffect(() => {
     m.emissive.set(selected ? COLORS.select : '#000000'); m.emissiveIntensity = selected ? 0.42 : 0
     invalidate()
@@ -90,6 +93,7 @@ function Pickable({ id, geometry, material, selected, dim, onSelect, offset, vis
         onPointerOver={(e) => { e.stopPropagation(); document.body.style.cursor = 'pointer'; m.emissive.set('#ffffff'); m.emissiveIntensity = selected ? 0.42 : 0.12; invalidate() }}
         onPointerOut={() => { document.body.style.cursor = 'auto'; m.emissive.set(selected ? COLORS.select : '#000000'); m.emissiveIntensity = selected ? 0.42 : 0; invalidate() }}
       />
+      {outline > 0 && <mesh geometry={geometry} material={edge} renderOrder={-1} />}
       {label && labelPos && visible && <LabelSprite text={label} position={labelPos} active={selected} />}
       {children}
     </group>
@@ -113,7 +117,7 @@ function Bones({ s, ex }: { s: SceneState; ex: React.MutableRefObject<{ v: numbe
       {BONE_IDS.map((id) => meshes[id] && (
         <group key={id} ref={(g) => { groups.current[id] = g }}>
           <Pickable id={id} geometry={meshes[id].geometry} material={mats[id]} selected={s.selected === id} dim={false} onSelect={s.onSelect}
-            offset={[0, 0, 0]} visible={layer.on && !s.hidden.has(id)} label={labelOn(s, id) ? BONE_NAME[id] : undefined}
+            offset={[0, 0, 0]} visible={layer.on && !s.hidden.has(id)} outline={0.03} opacity={layer.opacity} label={labelOn(s, id) ? BONE_NAME[id] : undefined}
             labelPos={labelAnchor(id)} />
         </group>
       ))}
@@ -140,7 +144,7 @@ function SoftReal({ s, ex }: { s: SceneState; ex: React.MutableRefObject<{ v: nu
   const mio = s.layers.miologia, lig = s.layers.ligamentos
   useEffect(() => {
     for (const id of MUSCLE_IDS) setOpacity(mats[id], mio.opacity)
-    for (const id of SOFT_IDS) setOpacity(mats[id], lig.opacity * 0.5)
+    for (const id of SOFT_IDS) setOpacity(mats[id], lig.opacity * 0.3)
     invalidate()
   }, [mio.opacity, lig.opacity, mats, invalidate])
   const refs = useRef<Record<string, THREE.Group | null>>({})
@@ -155,7 +159,7 @@ function SoftReal({ s, ex }: { s: SceneState; ex: React.MutableRefObject<{ v: nu
       {items.map(({ id, on, name, pos }) => meshes[id] && (
         <group key={id} ref={(g) => { refs.current[id] = g }}>
           <Pickable id={id} geometry={meshes[id].geometry} material={mats[id]} selected={s.selected === id} dim={false} onSelect={s.onSelect}
-            offset={[0, 0, 0]} visible={on && !s.hidden.has(id)} label={labelOn(s, id) ? name : undefined} labelPos={pos} />
+            offset={[0, 0, 0]} visible={on && !s.hidden.has(id)} outline={SOFT_IDS.includes(id as 'retinaculo') ? 0.02 : 0.035} opacity={SOFT_IDS.includes(id as 'retinaculo') ? lig.opacity * 0.3 : mio.opacity} label={labelOn(s, id) ? name : undefined} labelPos={pos} />
         </group>
       ))}
     </>
@@ -187,7 +191,7 @@ export default function Scene3D({ state, className, onReady }: { state: SceneSta
   if (s.layers.miologia.on || s.layers.ligamentos.on) softEverOn.current = true
   return (
     <Canvas
-      className={className} frameloop="demand" dpr={[1, 1.75]} camera={{ position: VIEWS.inicial, fov: 30, near: 0.1, far: 200 }}
+      className={className} frameloop="demand" dpr={[1, 1.75]} camera={{ position: VIEWS.inicial, fov: 28, near: 0.1, far: 200 }}
       gl={{ antialias: true, alpha: true, powerPreference: 'high-performance', preserveDrawingBuffer: true }}
       style={{ touchAction: 'none' }}
       onCreated={({ gl }) => { gl.toneMapping = THREE.NeutralToneMapping; gl.toneMappingExposure = 1.0; gl.outputColorSpace = THREE.SRGBColorSpace; onReady?.() }}
@@ -195,10 +199,11 @@ export default function Scene3D({ state, className, onReady }: { state: SceneSta
       aria-label="Modelo 3D de la región radiocarpiana a partir de BodyParts3D"
     >
       <Environment />
-      <ambientLight intensity={0.06} />
-      <directionalLight position={[-9, 12, 16]} intensity={1.25} />
-      <directionalLight position={[12, -4, 8]} intensity={0.35} color="#ffe9e0" />
-      <directionalLight position={[0, 6, -18]} intensity={0.6} color="#dfe8ff" />
+      <hemisphereLight args={['#ffffff', '#b8a68a', 0.16]} />
+      <directionalLight position={[-9, 13, 17]} intensity={2.3} color="#fff6ea" />
+      <directionalLight position={[13, -3, 9]} intensity={0.4} color="#ffe2d6" />
+      <directionalLight position={[-12, 4, -16]} intensity={1.0} color="#dbe6ff" />
+      <directionalLight position={[12, 8, -14]} intensity={0.8} color="#ffffff" />
       <CameraRig view={s.view} />
       <ExplodeDriver target={s.explode} ex={ex} />
       <Loader />

@@ -3,8 +3,9 @@ import { PLATES } from '../../data/plates.generated'
 import { NV_ITEMS } from '../../data/neurovascular'
 import { f1, linePath } from './plateGeo'
 
-export const ART = '#c0405f'
-export const NERVE = '#c99a12'
+export const ART = '#c42b36'
+export const NERVE = '#d9a514'
+const ART_LIGHT = '#ef6b6b', NERVE_LIGHT = '#ffe27a'
 const BASE = import.meta.env.BASE_URL
 const P = PLATES.palmar
 
@@ -21,7 +22,7 @@ export default function NeuroVascularFigure({ selected, onSelect, hidden }: { se
   const y0 = (P.a1 - 10.2) * P.S, y1 = (P.a1 + 4.2) * P.S
   return (
     <svg viewBox={`40 ${y0} ${P.w - 80} ${y1 - y0}`} role="group" aria-label="Arterias y nervios del antebrazo distal y la muñeca sobre los huesos reales, vista palmar" className="block h-auto w-full select-none">
-      <image href={`${BASE}atlas/palmar.webp`} x="0" y="0" width={P.w} height={P.h} opacity=".5" />
+      <image href={`${BASE}atlas/palmar.webp`} x="0" y="0" width={P.w} height={P.h} opacity=".82" />
       {NV_ITEMS.map((it) => {
         if (hidden[it.kind]) return null
         const src = PATHS[it.id] ? { pts: PATHS[it.id].pts, dashed: DORSAL.has(it.id) || !!it.dashed, r: PATHS[it.id].r } : { ...EXTRA[it.id], r: 0.06 }
@@ -33,7 +34,11 @@ export default function NeuroVascularFigure({ selected, onSelect, hidden }: { se
         return (
           <g key={it.id} opacity={selected && !isSel ? 0.4 : 1}>
             {isSel && <path d={d} fill="none" stroke={color} strokeOpacity=".28" strokeWidth={w + 14} strokeLinecap="round" strokeLinejoin="round" />}
-            <path d={d} fill="none" stroke={color} strokeWidth={w} strokeLinecap="round" strokeLinejoin="round" strokeDasharray={src.dashed ? `${w * 1.8} ${w * 1.4}` : undefined} />
+            <g className="plate-svg-shadow">
+              <path d={d} fill="none" stroke={it.kind === 'arteria' ? '#7d1620' : '#7a5a06'} strokeWidth={w + 3.5} strokeLinecap="round" strokeLinejoin="round" strokeDasharray={src.dashed ? `${w * 1.8} ${w * 1.4}` : undefined} />
+              <path d={d} fill="none" stroke={color} strokeWidth={w} strokeLinecap="round" strokeLinejoin="round" strokeDasharray={src.dashed ? `${w * 1.8} ${w * 1.4}` : undefined} />
+              <path d={d} fill="none" stroke={it.kind === 'arteria' ? ART_LIGHT : NERVE_LIGHT} strokeWidth={Math.max(1.6, w * 0.38)} strokeOpacity=".85" strokeLinecap="round" strokeLinejoin="round" strokeDasharray={src.dashed ? `${w * 1.8} ${w * 1.4}` : undefined} />
+            </g>
             <path d={d} fill="none" stroke="transparent" strokeWidth="34" strokeLinecap="round" pointerEvents="stroke" className="zone" role="button" tabIndex={0} aria-label={it.nombre} aria-pressed={isSel}
               onClick={() => onSelect(it.id)} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSelect(it.id) } }} />
             <g aria-hidden className="cursor-pointer" onClick={() => onSelect(it.id)}>
@@ -43,7 +48,6 @@ export default function NeuroVascularFigure({ selected, onSelect, hidden }: { se
           </g>
         )
       })}
-      <text x="52" y={y0 + 22} fontSize="14" fontWeight="600" fill="#5b6272" letterSpacing="1">VISTA PALMAR · PUNTEADO = DORSAL O PROFUNDO</text>
     </svg>
   )
 }

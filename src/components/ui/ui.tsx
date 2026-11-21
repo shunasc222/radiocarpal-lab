@@ -41,7 +41,7 @@ export function Toggle({ pressed, onClick, children, icon, tone = 'deep', title,
 
 /* ───────── Tarjetas y encabezados ───────── */
 export function Card({ className, children, as: Tag = 'div', ...rest }: { className?: string; children: ReactNode; as?: 'div' | 'section' | 'article' } & React.HTMLAttributes<HTMLElement>) {
-  return <Tag className={cn('rounded-3xl border border-line bg-warm p-5 shadow-soft sm:p-6', className)} {...rest}>{children}</Tag>
+  return <Tag className={cn('rounded-3xl border border-[#dcd7ca] bg-warm p-5 shadow-soft sm:p-6', className)} {...rest}>{children}</Tag>
 }
 
 export function SectionHeader({ n, eyebrow, title, lead, children }: { n?: number; eyebrow?: string; title: string; lead?: string; children?: ReactNode }) {
@@ -62,9 +62,9 @@ export function Field({ label, children, tone }: { label: string; children: Reac
   const bar = { rose: 'bg-rose', lilac: 'bg-lilac', steel: 'bg-steel', sage: 'bg-sage' }[tone ?? 'sage']
   return (
     <div className="relative pl-4">
-      <span className={cn('absolute inset-y-1 left-0 w-1 rounded-full', bar)} aria-hidden />
-      <dt className="text-[11px] font-semibold uppercase tracking-[0.14em] text-deep">{label}</dt>
-      <dd className="mt-0.5 text-[15px] leading-relaxed text-ink">{children}</dd>
+      <span className={cn('absolute inset-y-0.5 left-0 w-1.5 rounded-full', bar)} aria-hidden />
+      <dt className="text-[11px] font-bold uppercase tracking-[0.16em] text-deep-700">{label}</dt>
+      <dd className="mt-1 text-[15px] leading-[1.65] text-ink">{children}</dd>
     </div>
   )
 }

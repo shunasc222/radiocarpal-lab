@@ -133,7 +133,6 @@ function clipCapAbove(g, attrs, yc, capAttr = -1) {
   for (let i = 1; i < m.P.length; i += 3) m.P[i] = -m.P[i]
   const r = clipCap(m, attrs, -yc, capAttr, -1)
   for (let i = 1; i < r.g.P.length; i += 3) r.g.P[i] = -r.g.P[i]
-  for (let t = 0; t < r.g.I.length; t += 3) { const a = r.g.I[t + 1]; r.g.I[t + 1] = r.g.I[t + 2]; r.g.I[t + 2] = a }
   return r
 }
 
@@ -239,10 +238,29 @@ function writeGlb(file, items, extraAttrName) {
       .setAttribute('NORMAL', doc.createAccessor().setType('VEC3').setArray(normalsArr).setBuffer(buf))
       .setAttribute(extraAttrName, doc.createAccessor().setType('SCALAR').setArray(Float32Array.from(it.mask)).setBuffer(buf))
       .setIndices(doc.createAccessor().setType('SCALAR').setArray(Uint32Array.from(it.g.I)).setBuffer(buf))
+    if (it.ao) prim.setAttribute('_AO', doc.createAccessor().setType('SCALAR').setArray(Float32Array.from(it.ao)).setBuffer(buf))
     const mesh = doc.createMesh(id).addPrimitive(prim)
     scene.addChild(doc.createNode(id).setMesh(mesh))
   }
   return io.write(file, doc)
+}
+/* ───────── oclusión ambiental horneada por vértice (profundidad en los espacios articulares) ───────── */
+{
+  const R = 0.85, cell = R, grid = new Map(), key = (x, y, z) => `${Math.floor(x / cell)}|${Math.floor(y / cell)}|${Math.floor(z / cell)}`
+  for (const [id, it] of Object.entries(kept)) { const P = it.g.P; for (let i = 0; i < P.length; i += 3) { const k = key(P[i], P[i + 1], P[i + 2]); (grid.get(k) ?? grid.set(k, []).get(k)).push([P[i], P[i + 1], P[i + 2]]) } }
+  for (const it of Object.values(kept)) {
+    const P = it.g.P, N = normals(it.g), n = P.length / 3, ao = new Float32Array(n)
+    for (let i = 0; i < n; i++) {
+      const x = P[i * 3], y = P[i * 3 + 1], z = P[i * 3 + 2], nx = N[i * 3], ny = N[i * 3 + 1], nz = N[i * 3 + 2]
+      const cx = Math.floor(x / cell), cy = Math.floor(y / cell), cz = Math.floor(z / cell); let sum = 0
+      for (let a = -1; a <= 1; a++) for (let b = -1; b <= 1; b++) for (let c = -1; c <= 1; c++) {
+        const list = grid.get(`${cx + a}|${cy + b}|${cz + c}`); if (!list) continue
+        for (const u of list) { const dx = u[0] - x, dy = u[1] - y, dz = u[2] - z, d = Math.hypot(dx, dy, dz); if (d < 0.08 || d > R) continue; if ((dx * nx + dy * ny + dz * nz) / d > 0.35) sum += 1 - d / R }
+      }
+      ao[i] = Math.min(0.9, Math.pow(Math.min(1, sum / 190), 1.1))
+    }
+    it.ao = smoothAttr(it.g, ao, 2)
+  }
 }
 await writeGlb(`${OUT}/wrist-bones.glb`, kept, '_CARTILAGE')
 await writeGlb(`${OUT}/wrist-soft.glb`, { ...mus, ...soft }, '_TENDON')
@@ -396,7 +414,7 @@ const LIG = {
   'colateral-ulnar': [{ side: 'ulnar', path: [[-0.25, -0.55], [-0.75, -0.2], [-1.15, 0.15]], w: 0.32, off: 0.03 }],
 }
 const ligOut = {}
-for (const [id, strips] of Object.entries(LIG)) ligOut[id] = strips.map((s) => ribbon(s.side, s.path, s.off, s.w))
+for (const [id, strips] of Object.entries(LIG)) ligOut[id] = strips.map((s) => ribbon(s.side, s.path, s.off + 0.02, s.w * 1.5))
 // ligamentos «directos» (interóseos y radioulnares): hilos 3D entre puntos de referencia, con propietario
 const DIRECT = {
   escafolunar: { r: 0.075, pts: [[-0.64, -0.12, -0.8, 'escafoides'], [-0.64, -0.08, -0.25, 'escafoides'], [-0.64, -0.12, 0.4, 'escafoides']] },
@@ -424,7 +442,7 @@ const NVP = {
 // FCU (no incluido en BodyParts3D): recorrido esquemático hasta el pisiforme
 const fcuPts = polyline('palmar', [[1.2, 9.5], [1.25, 6], [1.25, 3], [1.2, 1], [1.12, -0.6], [1.1, -1.4]], 0.5)
 NVP.fcu = { r: 0.17, pts: fcuPts }
-for (const k of Object.keys(NVP)) NVP[k].pts = smoothPts(NVP[k].pts, k.startsWith('a-interosea') || k.startsWith('n-interoseo') ? 0 : 4)
+for (const k of Object.keys(NVP)) NVP[k].pts = smoothPts(NVP[k].pts, k.startsWith('a-interosea') || k.startsWith('n-interoseo') ? 0 : k === 'a-radial' ? 9 : 4)
 writeFileSync('src/data/anatomy3d.generated.ts', `/* Generado por scripts/build-models.mjs. Recorridos ESQUEMÁTICOS calculados sobre la geometría de BodyParts3D (trazado por rayos). Unidades: cm. Último valor de cada punto = índice del hueso propietario (BONE_ORDER) o −1. */\nexport const BONE_ORDER = ${JSON.stringify(BONE_ORDER)} as const\nexport const RIBBONS: Record<string, number[][][]> = ${JSON.stringify(ligOut)}\nexport const DIRECT: Record<string, { r: number; pts: number[][] }> = ${JSON.stringify(directOut)}\nexport const PATHS: Record<string, { r: number; pts: number[][] }> = ${JSON.stringify(NVP)}\n`)
 copyFileSync(`${PK}/LICENSE.bodyparts3d.txt`, `${OUT}/LICENSE.bodyparts3d.txt`)
 copyFileSync(`${PK}/LICENSE.bodyparts3d-supplemental.txt`, `${OUT}/LICENSE.bodyparts3d-supplemental.txt`)

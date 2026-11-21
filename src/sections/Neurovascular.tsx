@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
 import { Droplets, Zap } from 'lucide-react'
 import { Badge, Button, Card, Field, SectionHeader, Tabs, Toggle } from '../components/ui/ui'
+import { FigurePanel } from '../components/ui/FigurePanel'
 import NeuroVascularFigure, { ART, NERVE } from '../components/figure/NeuroVascularFigure'
 import { NV_BY_ID, NV_ITEMS, SCAPHOID_VASC, type NVKind } from '../data/neurovascular'
 import { PLATES } from '../data/plates.generated'
@@ -25,7 +26,7 @@ function ScaphoidInset() {
       <h3 className="text-2xl">{SCAPHOID_VASC.titulo}</h3>
       <div className="mt-3 grid items-center gap-4 sm:grid-cols-[240px_1fr]">
         <div>
-          <svg viewBox={`0 0 ${P.w} ${P.h}`} role="img" aria-label="Escafoides real con su aporte vascular esquemático y fractura simulada de la cintura" className="mx-auto block w-full max-w-[280px] rounded-2xl bg-cream">
+          <svg viewBox={`0 0 ${P.w} ${P.h}`} role="img" aria-label="Escafoides real con su aporte vascular esquemático y fractura simulada de la cintura" className="plate-bg mx-auto block w-full max-w-[280px] rounded-2xl border border-[#c4ccd6]">
             <defs><clipPath id="sc"><path d={z.d} fillRule="evenodd" /></clipPath></defs>
             <image href={`${BASE}atlas/scaphoid.webp`} x="0" y="0" width={P.w} height={P.h} />
             <g clipPath="url(#sc)"><path d={half} fill="#4b5563" opacity={fx ? 0.6 : 0} style={{ transition: 'opacity .4s' }} /></g>
@@ -78,9 +79,9 @@ export default function Neurovascular() {
         </div>
       </div>
 
-      <div className="grid gap-5 lg:grid-cols-[0.95fr_1.05fr]">
+      <div className="grid gap-5 lg:grid-cols-[1.1fr_1fr]">
         <div className="min-w-0 space-y-4">
-          <Card className="!p-3"><div className="mx-auto max-w-md"><NeuroVascularFigure selected={sel} onSelect={setSel} hidden={hidden} /></div></Card>
+          <FigurePanel caption="Huesos reales (BodyParts3D, CC BY 4.0) · vasos y nervios esquemáticos · punteado = dorsal o profundo"><div className="mx-auto max-w-md"><NeuroVascularFigure selected={sel} onSelect={setSel} hidden={hidden} /></div></FigurePanel>
           <ul className="flex flex-wrap gap-2" aria-label={tab === 'vascular' ? 'Lista de arterias' : 'Lista de nervios'}>
             {items.map((n) => (
               <li key={n.id}>
@@ -96,7 +97,7 @@ export default function Neurovascular() {
           <AnimatePresence mode="wait">
             {it ? (
               <motion.div key={it.id} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} data-testid="nv-card">
-                <Card as="article" className="!p-5">
+                <Card as="article" className="!p-5 border-t-[5px] border-t-sage shadow-lift">
                   <div className="mb-3 flex flex-wrap gap-2"><Badge tone={it.kind === 'arteria' ? 'rose' : 'lilac'}>{it.kind === 'arteria' ? 'Arteria' : 'Nervio'}</Badge><Badge tone="sage">{it.plano}</Badge></div>
                   <h2 className="text-[1.8rem] leading-tight">{it.nombre}</h2>
                   <dl className="mt-5 space-y-4">

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
 import { Activity, ChevronDown, Dumbbell } from 'lucide-react'
 import { Badge, Card, Field, SectionHeader, Tabs, Toggle } from '../components/ui/ui'
+import { FigurePanel } from '../components/ui/FigurePanel'
 import MuscleFigure from '../components/biomech/MuscleFigure'
 import MovementSim from '../components/biomech/MovementSim'
 import { AUXILIARES, MUSCLES } from '../data/muscles'
@@ -42,9 +43,7 @@ export default function Myology() {
           </div>
           <div className="grid gap-5 lg:grid-cols-[0.9fr_1.1fr]">
             <div className="min-w-0 space-y-4">
-              <Card className="!p-3">
-                <div className="mx-auto max-w-sm"><MuscleFigure view={view} selected={sel} onSelect={pick} /></div>
-              </Card>
+              <FigurePanel caption="Huesos y músculos reales (BodyParts3D, CC BY 4.0) · el tendón del flexor ulnar es esquemático"><div className="mx-auto max-w-sm"><MuscleFigure view={view} selected={sel} onSelect={pick} /></div></FigurePanel>
               <div className="grid gap-4 sm:grid-cols-2">
                 {(['flexor', 'extensor'] as const).map((g) => (
                   <div key={g}>
@@ -67,7 +66,7 @@ export default function Myology() {
               <AnimatePresence mode="wait">
                 {muscle ? (
                   <motion.div key={muscle.id} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} data-testid="muscle-card">
-                    <Card as="article" className="!p-5">
+                    <Card as="article" className="!p-5 border-t-[5px] border-t-sage shadow-lift">
                       <div className="mb-3 flex flex-wrap gap-2"><Badge tone={muscle.grupo === 'flexor' ? 'rose' : 'steel'}>{muscle.grupo === 'flexor' ? 'Flexor' : 'Extensor'} · motor principal</Badge></div>
                       <h2 className="text-[1.9rem] leading-tight">{muscle.nombre}</h2>
                       {muscle.alerta && <p className="mt-3 rounded-xl border border-lilac bg-lilac/15 p-3 text-sm">{muscle.alerta}</p>}

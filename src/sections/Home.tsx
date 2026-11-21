@@ -1,6 +1,7 @@
 import { motion } from 'motion/react'
 import { Activity, ArrowRight, Bone, ClipboardCheck, Compass, Stethoscope } from 'lucide-react'
 import { Button, Card } from '../components/ui/ui'
+import { FigurePanel } from '../components/ui/FigurePanel'
 import AtlasFigure from '../components/figure/AtlasFigure'
 import type { SectionId } from '../lib/nav'
 
@@ -31,10 +32,9 @@ export default function Home({ go }: { go: (id: SectionId) => void }) {
           </div>
         </motion.div>
         <motion.div initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.7, delay: 0.1 }} className="relative mx-auto w-full max-w-[640px]">
-          <div className="float">
+          <FigurePanel tone="deep" caption="Imagen elaborada con modelos de BodyParts3D (CC BY 4.0) · muñeca derecha · vista palmar">
             <AtlasFigure view="palmar" selected={null} showLabels highlightSurfaces={false} wide labelMargin={215} onlyLabels={HERO_LABELS} interactive={false} />
-          </div>
-          <p className="mt-1 text-center text-[11px] text-ink-soft">Imagen elaborada con modelos de BodyParts3D (CC BY 4.0) · muñeca derecha · vista palmar</p>
+          </FigurePanel>
         </motion.div>
       </section>
 

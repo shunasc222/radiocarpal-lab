@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
 import { AlertTriangle, ChevronLeft, ChevronRight, RotateCcw } from 'lucide-react'
 import { Badge, Button, Card, Field, SectionHeader, Tabs, Toggle } from '../components/ui/ui'
+import { FigurePanel } from '../components/ui/FigurePanel'
 import LigamentFigure, { CAT_COLOR } from '../components/figure/LigamentFigure'
 import { CATEGORY_LABEL, FAILURE_STEPS, LIGAMENTS, LIG_BY_ID, type LigCategory, type LigView } from '../data/ligaments'
 import { cn } from '../lib/utils'
@@ -40,14 +41,11 @@ export default function Ligaments() {
         ))}
       </div>
 
-      <div className="grid gap-5 lg:grid-cols-[1.1fr_1fr]">
+      <div className="grid gap-5 lg:grid-cols-[1.45fr_1fr]">
         <div className="min-w-0 space-y-4">
-          <Card className="!p-2 sm:!p-4">
+          <FigurePanel caption={<>{view === 'palmar' ? 'Vista palmar: radio a la izquierda.' : 'Vista dorsal: radio a la derecha.'} Huesos reales (BodyParts3D, CC BY 4.0); ligamentos y disco esquemáticos, con inserciones aproximadas; los interóseos y el disco se ven sobre el hueso por transparencia.</>}>
             <LigamentFigure view={view} selected={selected} onSelect={setSelected} cat={cat} />
-            <p className="px-2 pb-1 text-center text-xs text-ink-soft">
-              {view === 'palmar' ? 'Vista palmar: radio a la izquierda.' : 'Vista dorsal: radio a la derecha.'} Huesos reales (BodyParts3D, CC BY 4.0); ligamentos y disco esquemáticos, con inserciones aproximadas; los interóseos y el disco se ven sobre el hueso por transparencia.
-            </p>
-          </Card>
+          </FigurePanel>
           <ul className="flex flex-wrap gap-2" aria-label="Lista de ligamentos">
             {list.map((l) => (
               <li key={l.id}>
@@ -64,7 +62,7 @@ export default function Ligaments() {
           <AnimatePresence mode="wait">
             {lig ? (
               <motion.div key={lig.id} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} data-testid="ligament-card">
-                <Card as="article" className="!p-5">
+                <Card as="article" className="!p-5 border-t-[5px] border-t-sage shadow-lift">
                   <div className="mb-3 flex flex-wrap gap-2">
                     <Badge tone={lig.propio ? 'rose' : 'steel'}>{lig.propio ? 'Propio de la radiocarpiana' : lig.categoria === 'radioulnar' ? 'Estabilizador radioulnar distal' : 'Intercarpiano / no radiocarpiano'}</Badge>
                     <Badge tone="sage">{CATEGORY_LABEL[lig.categoria]}</Badge>
@@ -109,12 +107,12 @@ export default function Ligaments() {
         </div>
         <div className="grid gap-4 md:grid-cols-2">
           <Card className="!p-3">
-            <p className="mb-1 px-2 text-sm font-semibold text-deep-700">Carpo normal (vista dorsal)</p>
-            <LigamentFigure view="dorsal" selected="escafolunar" cat="todos" only={['escafolunar', 'lunopiramidal']} crop={[1.2, -2.6]} interactive={false} />
+            <p className="mb-2 px-2 text-sm font-semibold text-deep-700">Carpo normal (vista dorsal)</p><FigurePanel className="!rounded-2xl">
+            <LigamentFigure view="dorsal" selected="escafolunar" cat="todos" only={['escafolunar', 'lunopiramidal']} crop={[1.2, -2.6]} interactive={false} /></FigurePanel>
           </Card>
           <Card className="!p-3 border-rose/70">
-            <p className="mb-1 px-2 text-sm font-semibold text-rose-deep">Falla del ligamento escafolunar (esquema)</p>
-            <LigamentFigure view="dorsal" selected="escafolunar" cat="todos" only={['escafolunar', 'lunopiramidal']} failure crop={[1.2, -2.6]} interactive={false} />
+            <p className="mb-2 px-2 text-sm font-semibold text-rose-deep">Falla del ligamento escafolunar (esquema)</p><FigurePanel className="!rounded-2xl">
+            <LigamentFigure view="dorsal" selected="escafolunar" cat="todos" only={['escafolunar', 'lunopiramidal']} failure crop={[1.2, -2.6]} interactive={false} /></FigurePanel>
             <p className="px-2 pt-1 text-xs text-ink-soft">Rojo punteado: ligamento escafolunar roto. Consecuencia (no dibujada): el escafoides se flexiona y el semilunar se extiende (DISI).</p>
           </Card>
         </div>

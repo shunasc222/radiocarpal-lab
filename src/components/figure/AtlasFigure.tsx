@@ -43,7 +43,7 @@ function expand(id: string | null): Set<string> {
   out.add(id); STRUCTURE_BY_ID[id]?.hijos?.forEach((h) => out.add(h)); return out
 }
 
-export default function AtlasFigure({ view, selected, onSelect, showLabels, highlightSurfaces, target, onlyLabels, wide, viewBox: vb, labelMargin = 250, interactive = true, className }: AtlasFigureProps) {
+export default function AtlasFigure({ view, selected, onSelect, showLabels, highlightSurfaces, target, onlyLabels, wide, viewBox: vb, labelMargin = 215, interactive = true, className }: AtlasFigureProps) {
   const P = PLATES[view], zones = useMemo(() => zonesOf(view), [view])
   const sel = useMemo(() => expand(selected), [selected])
   const crop = view === 'distal' ? { y0: 140, y1: 600 } : { y0: (P.a1 - 5.6) * P.S, y1: P.h - 0.3 * P.S }
@@ -56,7 +56,7 @@ export default function AtlasFigure({ view, selected, onSelect, showLabels, high
     const place = (side: 'l' | 'r') => {
       const list = ids.filter((id) => (zones[id].cx < P.w / 2) === (side === 'l')).sort((a, b) => zones[a].cy - zones[b].cy)
       let last = -1e9
-      return list.map((id) => { const y = Math.max(zones[id].cy, last + 40); last = y; return { id, side, ty: y } })
+      return list.map((id) => { const y = Math.max(zones[id].cy, last + 46); last = y; return { id, side, ty: y } })
     }
     return [...place('l'), ...place('r')]
   }, [zones, onlyLabels, P.w])
@@ -86,12 +86,12 @@ export default function AtlasFigure({ view, selected, onSelect, showLabels, high
       {showLabels && labels.map(({ id, side, ty }) => {
         const z = zones[id], s = STRUCTURE_BY_ID[id], active = sel.has(id)
         if (wide) {
-          const tx = side === 'l' ? -18 : P.w + 18, x2 = side === 'l' ? -12 : P.w + 12
+          const tx = side === 'l' ? -16 : P.w + 16, x2 = side === 'l' ? -10 : P.w + 10
           return (
             <g key={id} aria-hidden className={interactive ? 'cursor-pointer' : ''} onClick={interactive && onSelect ? () => onSelect(id) : undefined}>
-              <polyline points={`${x2},${ty - 5} ${z.cx},${z.cy}`} fill="none" stroke={active ? '#536b5a' : '#7f8f72'} strokeWidth="1.5" />
-              <circle cx={z.cx} cy={z.cy} r="4.5" fill={active ? '#536b5a' : '#fff'} stroke="#536b5a" strokeWidth="1.6" />
-              <text x={tx} y={ty} textAnchor={side === 'l' ? 'end' : 'start'} fontSize="25" fontWeight={active ? 700 : 500} fill={active ? '#3f5446' : '#303542'} stroke="#faf7f2" strokeWidth="4" paintOrder="stroke">{SHORT[id]}</text>
+              <polyline points={`${x2},${ty - 5} ${z.cx},${z.cy}`} fill="none" stroke={active ? '#3f5446' : '#5d6b78'} strokeWidth="1.6" />
+              <circle cx={z.cx} cy={z.cy} r="5" fill={active ? '#536b5a' : '#fff'} stroke="#3f5446" strokeWidth="2" />
+              <text x={tx} y={ty} textAnchor={side === 'l' ? 'end' : 'start'} fontSize="27" fontWeight={active ? 700 : 600} fill={active ? '#2f4a38' : '#262c3a'} stroke="#f4f6f9" strokeWidth="6" paintOrder="stroke">{SHORT[id]}</text>
             </g>
           )
         }

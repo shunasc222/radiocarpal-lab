@@ -7,6 +7,9 @@ Aplicación web estática (React + TypeScript + Vite + Tailwind + Three.js/React
 ## Módulos
 1 Inicio · 2 Atlas anatómico · 3 **Explorador 3D por capas** (osteología, superficies articulares, ligamentos, miología, vasos y nervios) · 4 Ligamentos y estabilidad · 5 Miología y biomecánica (simulador) · 6 Vascularización e inervación · 7 Casos clínicos (3) · 8 Autoevaluación (20 preguntas), bibliografía APA y créditos.
 
+## Aspecto visual
+Las ilustraciones y el visor 3D se muestran sobre un panel gris azulado neutro (`FigurePanel`) para contrastar con el marfil de los huesos. Los huesos incluyen oclusión ambiental horneada, veteado sutil y contorno; los músculos, estriado de fibras y tendón nacarado; los ligamentos, material nacarado con tinte por categoría.
+
 ## Ilustraciones 2D
 Atlas, ligamentos, vasos/nervios y músculos usan láminas renderizadas a partir de los mismos modelos 3D reales (vistas palmar, dorsal y distal del radio y la ulna); las zonas interactivas son las siluetas reales de cada estructura. Ligamentos, disco, vasos y nervios se superponen de forma esquemática. No se incluye ninguna lámina de libro.
 

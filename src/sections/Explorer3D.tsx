@@ -16,7 +16,7 @@ const VIEW_BUTTONS: { id: ViewName; label: string }[] = [
 ]
 type LayerState = SceneState['layers']
 const INITIAL: LayerState = {
-  osteologia: { on: true, opacity: 1 }, superficies: { on: true, opacity: 0.8 }, ligamentos: { on: false, opacity: 1 }, miologia: { on: false, opacity: 0.6 }, neurovascular: { on: false, opacity: 1 },
+  osteologia: { on: true, opacity: 1 }, superficies: { on: true, opacity: 0.8 }, ligamentos: { on: false, opacity: 1 }, miologia: { on: false, opacity: 0.9 }, neurovascular: { on: false, opacity: 1 },
 }
 
 function LoadingOverlay() {
@@ -66,7 +66,7 @@ export default function Explorer3D({ go }: { go: (id: SectionId) => void }) {
       <div role="group" aria-label="Capas anatómicas" className="mb-4 flex flex-wrap gap-2">
         {LAYERS.map((l) => (
           <Toggle key={l.id} pressed={layers[l.id].on} onClick={() => setLayer(l.id, { on: !layers[l.id].on })} className="!pl-3">
-            <span className="grid size-5 place-items-center rounded-full text-[10px] font-bold text-ink" style={{ background: l.color }} aria-hidden>{l.n}</span>
+            <span className="grid size-5 place-items-center rounded-full border border-black/10 text-[10px] font-bold text-ink" style={{ background: l.color }} aria-hidden>{l.n}</span>
             <span className="hidden sm:inline">{l.nombre}</span><span className="sm:hidden">{l.corto}</span>
           </Toggle>
         ))}
@@ -76,10 +76,11 @@ export default function Explorer3D({ go }: { go: (id: SectionId) => void }) {
         <div className="min-w-0 space-y-4">
           <Card className="relative overflow-hidden !p-0">
             {ok ? (
-              <div className="relative h-[62dvh] min-h-[380px] max-h-[760px] w-full bg-[radial-gradient(ellipse_at_50%_35%,#ffffff_0%,#f5efe6_55%,#e9e4dc_100%)]" data-testid="canvas-wrap">
+              <div className="relative h-[62dvh] min-h-[380px] max-h-[760px] w-full bg-[radial-gradient(ellipse_at_50%_28%,#f8fafc_0%,#e4e9ef_52%,#c3ccd8_100%)]" data-testid="canvas-wrap">
                 <Suspense fallback={<div className="grid h-full place-items-center text-sm text-ink-soft" role="status">Cargando visor 3D…</div>}>
                   <Scene3D state={state} />
                 </Suspense>
+                <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-[16%] bg-gradient-to-b from-[#edf1f5] to-transparent" />
                 <LoadingOverlay />
                 <div className="pointer-events-none absolute left-3 top-3 flex gap-2"><span className="rounded-full bg-white/85 px-3 py-1 text-[11px] font-medium text-ink-soft shadow-soft backdrop-blur">Mano derecha · {activeCount} capa{activeCount === 1 ? '' : 's'}</span></div>
                 {card && <button type="button" onClick={() => document.getElementById('card3d')?.scrollIntoView({ behavior: 'smooth', block: 'start' })} className="absolute right-3 top-3 max-w-[60%] truncate rounded-full bg-deep px-3.5 py-2 text-xs font-semibold text-white shadow-lift lg:hidden">Ver ficha: {card.title}</button>}
@@ -126,7 +127,7 @@ export default function Explorer3D({ go }: { go: (id: SectionId) => void }) {
                         {st.on ? <Eye className="size-5 text-deep" /> : <EyeOff className="size-5 text-ink-soft" />}
                       </button>
                       <button type="button" aria-expanded={isOpen} onClick={() => setOpen(isOpen ? null : l.id)} className="flex min-h-11 min-w-0 flex-1 items-center gap-2 text-left">
-                        <span className="size-3 shrink-0 rounded-full border border-black/10" style={{ background: l.color }} aria-hidden />
+                        <span className="h-9 w-2.5 shrink-0 rounded-full border border-black/10" style={{ background: l.color }} aria-hidden />
                         <span className="min-w-0 flex-1"><span className="block text-[14px] font-semibold leading-tight">{l.n}. {l.nombre}</span><span className="block truncate text-[11.5px] text-ink-soft">{l.descripcion}</span></span>
                         <ChevronDown className={cn('size-4 shrink-0 transition-transform', isOpen && 'rotate-180')} />
                       </button>
@@ -174,7 +175,7 @@ function AnimatedCard({ card, onClose }: { card: ReturnType<typeof describe3D>; 
     return <Card className="grid min-h-40 place-items-center text-center" data-testid="structure-card-empty"><div><p className="font-serif text-2xl text-deep-700">Selecciona una estructura</p><p className="mt-2 text-sm text-ink-soft">Toca el modelo o elige un elemento en el panel de capas.</p></div></Card>
   }
   return (
-    <Card as="article" className="!p-5" data-testid="structure-card" key={card.id}>
+    <Card as="article" className="!p-5 border-t-[5px] border-t-sage shadow-lift" data-testid="structure-card" key={card.id}>
       <div className="mb-3 flex flex-wrap items-center gap-2">
         {card.badges.map((b) => <Badge key={b.text} tone={b.tone}>{b.text}</Badge>)}
         <Badge tone={card.provenance === 'real' ? 'sage' : 'lilac'}>{card.provenance === 'real' ? 'Malla real' : 'Esquemático'}</Badge>

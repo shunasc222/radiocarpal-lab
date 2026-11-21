@@ -35,3 +35,8 @@ export function discPath(key: PlateKey): string {
   }
   return polyPath(key, pts)
 }
+
+/** Línea de la cresta de una cinta (brillo central). */
+export function crestPath(key: PlateKey, strip: number[][]): string {
+  return linePath(key, strip.map((r) => [r[4], r[5], r[6]]))
+}

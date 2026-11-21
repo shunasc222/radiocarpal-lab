@@ -7,7 +7,7 @@ export function StructureCard({ s }: { s: Structure | null }) {
     <AnimatePresence mode="wait">
       {s ? (
         <motion.div key={s.id} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.25 }} data-testid="structure-card">
-          <Card as="article" aria-live="polite" className="!p-5">
+          <Card as="article" aria-live="polite" className="!p-5 border-t-[5px] border-t-sage shadow-lift">
             <div className="mb-3 flex flex-wrap items-center gap-2">
               <Badge tone={s.participacion === 'directa' ? 'rose' : 'steel'}>{s.participacion === 'directa' ? 'Participa directamente' : 'Estructura relacionada'}</Badge>
               <Badge tone="sage">{s.grupo}</Badge>
